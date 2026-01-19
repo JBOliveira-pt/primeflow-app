@@ -10,24 +10,24 @@ Um novo sistema de permissões foi implementado para controlar o acesso às func
 
 ### 1. **Sistema de Roles no Banco de Dados**
 
--   Adicionado campo `role` à tabela `users` (tipo VARCHAR, padrão: 'user')
--   Valores possíveis: `'admin'` ou `'user'`
+- Adicionado campo `role` à tabela `users` (tipo VARCHAR, padrão: 'user')
+- Valores possíveis: `'admin'` ou `'user'`
 
 ### 2. **Autenticação com Role**
 
--   Atualizado `auth.ts` para incluir `role` nos callbacks JWT e Session
--   O `role` é agora propagado em toda a aplicação via session
+- Atualizado `auth.ts` para incluir `role` nos callbacks JWT e Session
+- O `role` é agora propagado em toda a aplicação via session
 
 ### 3. **Verificação de Permissões nas Server Actions**
 
--   `updateInvoice()`: Requer role `'admin'`
--   `deleteInvoice()`: Requer role `'admin'`
--   Retorna erro se usuário não for admin
+- `updateInvoice()`: Requer role `'admin'`
+- `deleteInvoice()`: Requer role `'admin'`
+- Retorna erro se usuário não for admin
 
 ### 4. **Botões Condicionais**
 
--   Botões de editar e apagar agora só aparecem para admins
--   Usuários normais não veem os botões (retornam `null`)
+- Botões de editar e apagar agora só aparecem para admins
+- Usuários normais não veem os botões (retornam `null`)
 
 ---
 
@@ -124,11 +124,11 @@ pnpm seed:admin
 
 ## 🔒 Segurança
 
--   ✅ Senhas são hashadas com bcrypt (10 rounds)
--   ✅ Verificação de role ocorre no servidor (Server Actions)
--   ✅ Tokens JWT incluem role (verificável no servidor)
--   ✅ Botões só aparecem se autorizado
--   ✅ Ações no backend rejeitam usuários não-admin
+- ✅ Senhas são hashadas com bcrypt (10 rounds)
+- ✅ Verificação de role ocorre no servidor (Server Actions)
+- ✅ Tokens JWT incluem role (verificável no servidor)
+- ✅ Botões só aparecem se autorizado
+- ✅ Ações no backend rejeitam usuários não-admin
 
 ---
 
@@ -156,25 +156,25 @@ curl http://localhost:3000/seed
 
 ### "Unauthorized: Admin access required"
 
--   Certifique-se de que está logado como admin
--   Verifique se o email está correto: `admin@example.com`
+- Certifique-se de que está logado como admin
+- Verifique se o email está correto: `admin@example.com`
 
 ### Botões não aparecem
 
--   Limpe o cache do navegador (Ctrl+Shift+Delete)
--   Faça logout e login novamente
--   Verifique se a sessão está sendo carregada corretamente
+- Limpe o cache do navegador (Ctrl+Shift+Delete)
+- Faça logout e login novamente
+- Verifique se a sessão está sendo carregada corretamente
 
 ### Erro ao editar/apagar
 
--   Verifique se seu usuário tem `role = 'admin'` no banco
--   Cheque os logs do servidor para mais detalhes
+- Verifique se seu usuário tem `role = 'admin'` no banco
+- Cheque os logs do servidor para mais detalhes
 
 ---
 
 ## ✨ Próximas Melhorias
 
--   [ ] Dashboard administrativo para gerenciar roles
--   [ ] Audit log de ações realizadas
--   [ ] Diferentes níveis de permissão (viewer, editor, admin)
--   [ ] 2FA (Two-Factor Authentication)
+- [ ] Dashboard administrativo para gerenciar roles
+- [ ] Audit log de ações realizadas
+- [ ] Diferentes níveis de permissão (viewer, editor, admin)
+- [ ] 2FA (Two-Factor Authentication)
