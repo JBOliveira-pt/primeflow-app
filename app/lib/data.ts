@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import {
+    Customer,
     CustomerField,
     CustomersTableType,
     InvoiceForm,
@@ -90,7 +91,7 @@ export async function fetchCardData() {
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(
     query: string,
-    currentPage: number
+    currentPage: number,
 ) {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
@@ -194,9 +195,9 @@ export async function fetchFilteredCustomers(query: string) {
 		  customers.name,
 		  customers.email,
 		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+          COUNT(invoices.id) AS total_invoices,
+          COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
+          COALESCE(SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END), 0) AS total_paid
 		FROM customers
 		LEFT JOIN invoices ON customers.id = invoices.customer_id
 		WHERE
@@ -216,5 +217,20 @@ export async function fetchFilteredCustomers(query: string) {
     } catch (err) {
         console.error("Database Error:", err);
         throw new Error("Failed to fetch customer table.");
+    }
+}
+
+export async function fetchCustomerById(id: string) {
+    try {
+        const data = await sql<Customer[]>`
+      SELECT id, name, email, image_url
+      FROM customers
+      WHERE id = ${id}
+    `;
+
+        return data[0];
+    } catch (error) {
+        console.error("Database Error:", error);
+        throw new Error("Failed to fetch customer.");
     }
 }

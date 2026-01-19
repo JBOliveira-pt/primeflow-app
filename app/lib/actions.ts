@@ -7,6 +7,9 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import postgres from "postgres";
+import { promises as fs } from "fs";
+import path from "path";
+import crypto from "crypto";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -48,9 +51,66 @@ export type State = {
     message?: string | null;
 };
 
+const CustomerFormSchema = z.object({
+    firstName: z
+        .string()
+        .trim()
+        .min(1, { message: "Please enter a first name." }),
+    lastName: z
+        .string()
+        .trim()
+        .min(1, { message: "Please enter a last name." }),
+    email: z.string().email({ message: "Please enter a valid email." }),
+    imageUrl: z
+        .string()
+        .trim()
+        .optional()
+        .refine(
+            (value) =>
+                !value ||
+                value.startsWith("http://") ||
+                value.startsWith("https://") ||
+                value.startsWith("/"),
+            {
+                message: "Use a full URL or a path starting with /.",
+            },
+        ),
+});
+
+const CreateCustomer = CustomerFormSchema;
+const UpdateCustomer = CustomerFormSchema;
+
+export type CustomerState = {
+    errors?: {
+        firstName?: string[];
+        lastName?: string[];
+        email?: string[];
+        imageUrl?: string[];
+    };
+    message?: string | null;
+};
+
+async function persistUpload(file: File | null) {
+    if (!file || file.size === 0) {
+        return null;
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(uploadsDir, { recursive: true });
+
+    const extension = path.extname(file.name) || ".bin";
+    const filename = `${crypto.randomUUID()}${extension}`;
+    const filepath = path.join(uploadsDir, filename);
+
+    await fs.writeFile(filepath, buffer);
+
+    return `/uploads/${filename}`;
+}
+
 export async function authenticate(
     prevState: string | undefined,
-    formData: FormData
+    formData: FormData,
 ) {
     try {
         await signIn("credentials", formData);
@@ -108,7 +168,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
 export async function updateInvoice(
     id: string,
     prevState: State,
-    formData: FormData
+    formData: FormData,
 ) {
     // Check admin permission
     try {
@@ -164,4 +224,137 @@ export async function deleteInvoice(id: string) {
     }
 
     revalidatePath("/dashboard/invoices");
+}
+
+export async function createCustomer(
+    prevState: CustomerState,
+    formData: FormData,
+) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        return {
+            message: "Unauthorized: Only admins can create customers.",
+        };
+    }
+
+    const validatedFields = CreateCustomer.safeParse({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        imageUrl: formData.get("imageUrl") || undefined,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Missing or invalid fields. Failed to create customer.",
+        };
+    }
+
+    const imageFile = formData.get("imageFile");
+    const uploadedPath =
+        imageFile instanceof File ? await persistUpload(imageFile) : null;
+
+    const { firstName, lastName, email, imageUrl } = validatedFields.data;
+    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
+    const normalizedImageUrl = imageUrl?.trim() || null;
+    const finalImageUrl = uploadedPath || normalizedImageUrl;
+
+    if (!finalImageUrl) {
+        return {
+            message: "Please provide a photo (upload a file or set a URL).",
+        };
+    }
+
+    try {
+        await sql`
+      INSERT INTO customers (id, name, email, image_url)
+      VALUES (gen_random_uuid(), ${fullName}, ${email}, ${finalImageUrl})
+    `;
+    } catch (error) {
+        console.error(error);
+        return {
+            message: "Database Error: Failed to create customer.",
+        };
+    }
+
+    revalidatePath("/dashboard/customers");
+    redirect("/dashboard/customers");
+}
+
+export async function updateCustomer(
+    id: string,
+    prevState: CustomerState,
+    formData: FormData,
+) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        return {
+            message: "Unauthorized: Only admins can update customers.",
+        };
+    }
+
+    const validatedFields = UpdateCustomer.safeParse({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        imageUrl: formData.get("imageUrl") || undefined,
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Missing or invalid fields. Failed to update customer.",
+        };
+    }
+
+        const imageFile = formData.get("imageFile");
+        const uploadedPath =
+                imageFile instanceof File ? await persistUpload(imageFile) : null;
+
+        const { firstName, lastName, email, imageUrl } = validatedFields.data;
+        const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
+        const normalizedImageUrl = imageUrl?.trim() || null;
+        const finalImageUrl = uploadedPath || normalizedImageUrl;
+
+        if (!finalImageUrl) {
+                return {
+                        message: "Please provide a photo (upload a file or set a URL).",
+                };
+        }
+
+    try {
+        await sql`
+      UPDATE customers
+            SET name = ${fullName}, email = ${email}, image_url = ${finalImageUrl}
+      WHERE id = ${id}
+    `;
+    } catch (error) {
+        console.error(error);
+        return { message: "Database Error: Failed to update customer." };
+    }
+
+    revalidatePath("/dashboard/customers");
+    redirect("/dashboard/customers");
+}
+
+export async function deleteCustomer(id: string) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        throw new Error("Unauthorized: Only admins can delete customers.");
+    }
+
+    try {
+        await sql`DELETE FROM customers WHERE id = ${id}`;
+    } catch (error) {
+        console.error(error);
+        throw new Error(
+            "Database Error: Failed to delete customer. Remove related invoices first.",
+        );
+    }
+
+    revalidatePath("/dashboard/customers");
 }
