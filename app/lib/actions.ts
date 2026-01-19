@@ -61,20 +61,6 @@ const CustomerFormSchema = z.object({
         .trim()
         .min(1, { message: "Please enter a last name." }),
     email: z.string().email({ message: "Please enter a valid email." }),
-    imageUrl: z
-        .string()
-        .trim()
-        .optional()
-        .refine(
-            (value) =>
-                !value ||
-                value.startsWith("http://") ||
-                value.startsWith("https://") ||
-                value.startsWith("/"),
-            {
-                message: "Use a full URL or a path starting with /.",
-            },
-        ),
 });
 
 const CreateCustomer = CustomerFormSchema;
@@ -85,7 +71,6 @@ export type CustomerState = {
         firstName?: string[];
         lastName?: string[];
         email?: string[];
-        imageUrl?: string[];
     };
     message?: string | null;
 };
@@ -242,7 +227,6 @@ export async function createCustomer(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
-        imageUrl: formData.get("imageUrl") || undefined,
     });
 
     if (!validatedFields.success) {
@@ -253,24 +237,21 @@ export async function createCustomer(
     }
 
     const imageFile = formData.get("imageFile");
-    const uploadedPath =
-        imageFile instanceof File ? await persistUpload(imageFile) : null;
-
-    const { firstName, lastName, email, imageUrl } = validatedFields.data;
-    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
-    const normalizedImageUrl = imageUrl?.trim() || null;
-    const finalImageUrl = uploadedPath || normalizedImageUrl;
-
-    if (!finalImageUrl) {
+    if (!(imageFile instanceof File) || imageFile.size === 0) {
         return {
-            message: "Please provide a photo (upload a file or set a URL).",
+            message: "Please upload a customer photo.",
         };
     }
+
+    const uploadedPath = await persistUpload(imageFile);
+
+    const { firstName, lastName, email } = validatedFields.data;
+    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
         await sql`
       INSERT INTO customers (id, name, email, image_url)
-      VALUES (gen_random_uuid(), ${fullName}, ${email}, ${finalImageUrl})
+      VALUES (gen_random_uuid(), ${fullName}, ${email}, ${uploadedPath})
     `;
     } catch (error) {
         console.error(error);
@@ -280,6 +261,8 @@ export async function createCustomer(
     }
 
     revalidatePath("/dashboard/customers");
+    revalidatePath("/dashboard/invoices");
+    revalidatePath("/dashboard/(overview)");
     redirect("/dashboard/customers");
 }
 
@@ -300,7 +283,6 @@ export async function updateCustomer(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
-        imageUrl: formData.get("imageUrl") || undefined,
     });
 
     if (!validatedFields.success) {
@@ -310,25 +292,22 @@ export async function updateCustomer(
         };
     }
 
-        const imageFile = formData.get("imageFile");
-        const uploadedPath =
-                imageFile instanceof File ? await persistUpload(imageFile) : null;
+    const imageFile = formData.get("imageFile");
+    if (!(imageFile instanceof File) || imageFile.size === 0) {
+        return {
+            message: "Please upload a new customer photo.",
+        };
+    }
 
-        const { firstName, lastName, email, imageUrl } = validatedFields.data;
-        const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
-        const normalizedImageUrl = imageUrl?.trim() || null;
-        const finalImageUrl = uploadedPath || normalizedImageUrl;
+    const uploadedPath = await persistUpload(imageFile);
 
-        if (!finalImageUrl) {
-                return {
-                        message: "Please provide a photo (upload a file or set a URL).",
-                };
-        }
+    const { firstName, lastName, email } = validatedFields.data;
+    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
         await sql`
       UPDATE customers
-            SET name = ${fullName}, email = ${email}, image_url = ${finalImageUrl}
+      SET name = ${fullName}, email = ${email}, image_url = ${uploadedPath}
       WHERE id = ${id}
     `;
     } catch (error) {
@@ -337,6 +316,8 @@ export async function updateCustomer(
     }
 
     revalidatePath("/dashboard/customers");
+    revalidatePath("/dashboard/invoices");
+    revalidatePath("/dashboard/(overview)");
     redirect("/dashboard/customers");
 }
 
@@ -357,4 +338,173 @@ export async function deleteCustomer(id: string) {
     }
 
     revalidatePath("/dashboard/customers");
+    revalidatePath("/dashboard/invoices");
+    revalidatePath("/dashboard/(overview)");
+}
+
+const UserFormSchema = z.object({
+    firstName: z
+        .string()
+        .trim()
+        .min(1, { message: "Please enter a first name." }),
+    lastName: z
+        .string()
+        .trim()
+        .min(1, { message: "Please enter a last name." }),
+    email: z.string().email({ message: "Please enter a valid email." }),
+    password: z
+        .string()
+        .min(6, { message: "Password must be at least 6 characters." })
+        .optional()
+        .or(z.literal("")),
+    role: z.enum(["admin", "user"], {
+        invalid_type_error: "Please select a valid role.",
+    }),
+});
+
+const CreateUser = UserFormSchema.extend({
+    password: z
+        .string()
+        .min(6, { message: "Password must be at least 6 characters." }),
+});
+
+const UpdateUser = UserFormSchema;
+
+export type UserState = {
+    errors?: {
+        firstName?: string[];
+        lastName?: string[];
+        email?: string[];
+        password?: string[];
+        role?: string[];
+    };
+    message?: string | null;
+};
+
+export async function createUser(prevState: UserState, formData: FormData) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        return {
+            message: "Unauthorized: Only admins can create users.",
+        };
+    }
+
+    const validatedFields = CreateUser.safeParse({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        role: formData.get("role"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Missing or invalid fields. Failed to create user.",
+        };
+    }
+
+    const imageFile = formData.get("imageFile");
+    let uploadedPath = "/customers/default-avatar.png";
+
+    if (imageFile instanceof File && imageFile.size > 0) {
+        uploadedPath = (await persistUpload(imageFile)) || uploadedPath;
+    }
+
+    const { firstName, lastName, email, password, role } = validatedFields.data;
+    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
+
+    // Hash the password
+    const bcrypt = require("bcrypt");
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+        await sql`
+            INSERT INTO users (id, name, email, password, role)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${hashedPassword}, ${role})
+        `;
+    } catch (error) {
+        console.error(error);
+        return {
+            message: "Database Error: Failed to create user.",
+        };
+    }
+
+    revalidatePath("/dashboard/users");
+    redirect("/dashboard/users");
+}
+
+export async function updateUser(
+    id: string,
+    prevState: UserState,
+    formData: FormData,
+) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        return {
+            message: "Unauthorized: Only admins can update users.",
+        };
+    }
+
+    const validatedFields = UpdateUser.safeParse({
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        role: formData.get("role"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Missing or invalid fields. Failed to update user.",
+        };
+    }
+
+    const { firstName, lastName, email, password, role } = validatedFields.data;
+    const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
+
+    try {
+        // Update user, conditionally updating password if provided
+        if (password && password.length >= 6) {
+            const bcrypt = require("bcrypt");
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await sql`
+                UPDATE users
+                SET name = ${fullName}, email = ${email}, password = ${hashedPassword}, role = ${role}
+                WHERE id = ${id}
+            `;
+        } else {
+            await sql`
+                UPDATE users
+                SET name = ${fullName}, email = ${email}, role = ${role}
+                WHERE id = ${id}
+            `;
+        }
+    } catch (error) {
+        console.error(error);
+        return { message: "Database Error: Failed to update user." };
+    }
+
+    revalidatePath("/dashboard/users");
+    redirect("/dashboard/users");
+}
+
+export async function deleteUser(id: string) {
+    try {
+        await checkAdminPermission();
+    } catch (error) {
+        throw new Error("Unauthorized: Only admins can delete users.");
+    }
+
+    try {
+        await sql`DELETE FROM users WHERE id = ${id}`;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Database Error: Failed to delete user.");
+    }
+
+    revalidatePath("/dashboard/users");
 }

@@ -25,7 +25,7 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
     );
 
     return (
-        <form action={formAction} encType="multipart/form-data">
+        <form action={formAction}>
             <div className="rounded-md bg-gray-50 p-4 md:p-6">
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
@@ -120,41 +120,10 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
 
                 <div className="mt-4 space-y-2">
                     <label
-                        htmlFor="imageUrl"
-                        className="block text-sm font-medium"
-                    >
-                        Photo URL or path
-                    </label>
-                    <div className="relative">
-                        <input
-                            id="imageUrl"
-                            name="imageUrl"
-                            type="text"
-                            defaultValue={customer.image_url}
-                            className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                            aria-describedby="imageUrl-error"
-                        />
-                        <PhotoIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-                    </div>
-                    <div
-                        id="imageUrl-error"
-                        aria-live="polite"
-                        aria-atomic="true"
-                    >
-                        {state.errors?.imageUrl?.map((error) => (
-                            <p key={error} className="text-sm text-red-500">
-                                {error}
-                            </p>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="mt-4 space-y-2">
-                    <label
                         htmlFor="imageFile"
                         className="block text-sm font-medium"
                     >
-                        Photo upload (optional)
+                        Photo
                     </label>
                     <input
                         id="imageFile"
@@ -164,7 +133,7 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
                         className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-gray-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-300"
                     />
                     <p className="text-xs text-gray-500">
-                        Upload a new photo or keep the current URL.
+                        Upload a new photo.
                     </p>
                 </div>
 
