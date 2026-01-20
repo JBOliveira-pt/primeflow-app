@@ -35,7 +35,9 @@ export async function fetchRevenue() {
 export async function fetchLatestInvoices() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     try {
-        const data = await sql<(Omit<LatestInvoiceRaw, 'image_url'> & { customer_id: string })[]>`
+        const data = await sql<
+            (Omit<LatestInvoiceRaw, "image_url"> & { customer_id: string })[]
+        >`
       SELECT invoices.amount, customers.name, customers.id as customer_id, customers.email, invoices.id
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
@@ -98,7 +100,9 @@ export async function fetchFilteredInvoices(
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
     try {
-        const invoices = await sql<(Omit<InvoicesTable, 'image_url'> & { customer_id: string })[]>`
+        const invoices = await sql<
+            (Omit<InvoicesTable, "image_url"> & { customer_id: string })[]
+        >`
       SELECT
         invoices.id,
         invoices.amount,
@@ -197,7 +201,9 @@ export async function fetchCustomers() {
 
 export async function fetchFilteredCustomers(query: string) {
     try {
-        const data = await sql<(Omit<CustomersTableType, 'image_url'> & { id: string })[]>`
+        const data = await sql<
+            (Omit<CustomersTableType, "image_url"> & { id: string })[]
+        >`
 		SELECT
 		  customers.id,
 		  customers.name,
@@ -230,7 +236,9 @@ export async function fetchFilteredCustomers(query: string) {
 
 export async function fetchCustomerById(id: string) {
     try {
-        const data = await sql<(Omit<Customer, 'image_url'> & { id: string })[]>`
+        const data = await sql<
+            (Omit<Customer, "image_url"> & { id: string })[]
+        >`
       SELECT id, name, email
       FROM customers
       WHERE id = ${id}
