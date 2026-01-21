@@ -22,7 +22,14 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                     >
                                         <div className="flex items-center justify-between border-b pb-4">
                                             <div>
-                                                <div className="mb-2 flex items-center">
+                                                <div className="mb-2 flex items-center gap-3">
+                                                    <Image
+                                                        src={user.image_url}
+                                                        alt={`${user.name}'s profile picture`}
+                                                        width={28}
+                                                        height={28}
+                                                        className="rounded-full object-cover"
+                                                    />
                                                     <p className="font-medium">
                                                         {user.name}
                                                     </p>
@@ -46,6 +53,7 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                     </div>
                                 ))}
                             </div>
+
                             <table className="hidden min-w-full rounded-md text-gray-900 md:table">
                                 <thead className="rounded-md bg-gray-50 text-left text-sm font-normal">
                                     <tr>
@@ -84,6 +92,13 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                         <tr key={user.id} className="group">
                                             <td className="whitespace-nowrap bg-white py-5 pl-4 pr-3 text-sm text-black group-first-of-type:rounded-md group-last-of-type:rounded-md sm:pl-6">
                                                 <div className="flex items-center gap-3">
+                                                    <Image
+                                                        src={user.image_url}
+                                                        alt={`${user.name}'s profile picture`}
+                                                        width={28}
+                                                        height={28}
+                                                        className="rounded-full object-cover"
+                                                    />
                                                     <p>{user.name}</p>
                                                 </div>
                                             </td>

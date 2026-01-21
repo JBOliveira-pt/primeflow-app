@@ -261,7 +261,7 @@ export async function fetchCustomerById(id: string) {
 
 export async function fetchFilteredUsers(query: string) {
     try {
-        const data = await sql<User[]>`
+        const data = await sql<Omit<User, "image_url" | "password">[]>`
             SELECT id, name, email, role
             FROM users
             WHERE
@@ -270,7 +270,12 @@ export async function fetchFilteredUsers(query: string) {
             ORDER BY name ASC
         `;
 
-        return data;
+        const usersWithImage = data.map((user) => ({
+            ...user,
+            image_url: `/api/image/user/${user.id}`,
+        }));
+
+        return usersWithImage as unknown as User[];
     } catch (err) {
         console.error("Database Error:", err);
         throw new Error("Failed to fetch users table.");
@@ -279,13 +284,16 @@ export async function fetchFilteredUsers(query: string) {
 
 export async function fetchUserById(id: string) {
     try {
-        const data = await sql<User[]>`
+        const data = await sql<Omit<User, "image_url">[]>`
             SELECT id, name, email, password, role
             FROM users
             WHERE id = ${id}
         `;
 
-        return data[0];
+        const user = data[0];
+        return user
+            ? { ...user, image_url: `/api/image/user/${user.id}` }
+            : undefined;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch user.");

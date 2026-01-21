@@ -33,6 +33,10 @@ export default async function LatestInvoices() {
                                         src={invoice.image_url}
                                         alt={`${invoice.name}'s profile picture`}
                                         className="mr-4 rounded-full"
+                                        style={{
+                                            objectFit: "cover",
+                                            aspectRatio: "1 / 1",
+                                        }}
                                         width={32}
                                         height={32}
                                     />

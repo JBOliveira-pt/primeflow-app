@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { useActionState } from "react";
+import { useActionState, useState, ChangeEvent } from "react";
 import { updateUser, UserState } from "@/app/lib/actions";
 import { User } from "@/app/lib/definitions";
 import {
@@ -25,6 +25,17 @@ export default function EditUserForm({ user }: { user: User }) {
     const { firstName, lastName } = splitName(user.name);
     const updateUserWithId = updateUser.bind(null, user.id);
     const [state, formAction] = useActionState(updateUserWithId, initialState);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setPreview(url);
+        } else {
+            setPreview(null);
+        }
+    }
 
     return (
         <form action={formAction}>
@@ -158,11 +169,22 @@ export default function EditUserForm({ user }: { user: User }) {
                     >
                         Photo
                     </label>
+                    <div className="flex items-center gap-4">
+                        <img
+                            src={preview ?? `/api/image/user/${user.id}`}
+                            alt="User avatar preview"
+                            className="h-16 w-16 rounded-full object-cover border border-gray-200"
+                        />
+                        <div className="text-xs text-gray-500">
+                            {preview ? "Preview da nova foto" : "Foto atual"}
+                        </div>
+                    </div>
                     <input
                         id="imageFile"
                         name="imageFile"
                         type="file"
                         accept="image/*"
+                        onChange={onFileChange}
                         className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-gray-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-300"
                     />
                     <p className="text-xs text-gray-500">

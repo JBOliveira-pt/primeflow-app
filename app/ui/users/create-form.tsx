@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-import { useActionState } from "react";
+import { useActionState, useState, ChangeEvent } from "react";
 import { createUser, UserState } from "@/app/lib/actions";
 import {
     AtSymbolIcon,
@@ -15,6 +15,17 @@ const initialState: UserState = { message: null, errors: {} };
 
 export default function CreateUserForm() {
     const [state, formAction] = useActionState(createUser, initialState);
+    const [preview, setPreview] = useState<string | null>(null);
+
+    function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            setPreview(url);
+        } else {
+            setPreview(null);
+        }
+    }
 
     return (
         <form action={formAction}>
@@ -148,11 +159,32 @@ export default function CreateUserForm() {
                     >
                         Photo
                     </label>
+                    <div className="flex items-center gap-4">
+                        <div className="h-16 w-16 overflow-hidden rounded-full border border-gray-200">
+                            {preview ? (
+                                <img
+                                    src={preview}
+                                    alt="User avatar preview"
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">
+                                    No image
+                                </div>
+                            )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                            {preview
+                                ? "Preview pronto"
+                                : "Selecione uma imagem"}
+                        </div>
+                    </div>
                     <input
                         id="imageFile"
                         name="imageFile"
                         type="file"
                         accept="image/*"
+                        onChange={onFileChange}
                         className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-gray-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-300"
                     />
                     <p className="text-xs text-gray-500">
