@@ -9,7 +9,7 @@ import { fetchFilteredCustomers } from "@/app/lib/data";
 import { AddCustomerButton } from "@/app/ui/customers/buttons";
 
 export const metadata: Metadata = {
-    title: "Customers | Acme Dashboard",
+    title: "Customers | PrimeFlow Dashboard",
 };
 
 const ITEMS_PER_PAGE = 6;
@@ -29,7 +29,7 @@ export default async function Page(props: {
 
     const paginatedCustomers = customers.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
+        currentPage * ITEMS_PER_PAGE,
     );
 
     return (

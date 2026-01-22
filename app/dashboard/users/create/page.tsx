@@ -3,7 +3,7 @@ import CreateUserForm from "@/app/ui/users/create-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Create User | Acme Dashboard",
+    title: "Create User | PrimeFlow Dashboard",
 };
 
 export default function Page() {

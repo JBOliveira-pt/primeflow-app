@@ -1,13 +1,23 @@
-import { GlobeAltIcon } from '@heroicons/react/24/outline';
-import { lusitana } from '@/app/ui/fonts';
+import Image from "next/image";
 
-export default function AcmeLogo() {
-  return (
-    <div
-      className={`${lusitana.className} flex flex-row items-center leading-none text-white`}
-    >
-      <GlobeAltIcon className="h-12 w-12 rotate-[15deg]" />
-      <p className="text-[44px]">Acme</p>
-    </div>
-  );
+export default function PrimeflowLogo() {
+    return (
+        <div className="flex items-center gap-2">
+            {/* Logo com suporte a dark/light mode */}
+            <Image
+                src="/images/primeflow-whiteroundlogo-nobg.png"
+                alt="PrimeFlow Logo"
+                width={80}
+                height={80}
+                className="dark:hidden"
+            />
+            <Image
+                src="/images/primeflow-darkroundlogo-nobg.png"
+                alt="PrimeFlow Logo"
+                width={80}
+                height={80}
+                className="hidden dark:block"
+            />
+        </div>
+    );
 }

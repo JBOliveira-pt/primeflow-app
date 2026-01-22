@@ -109,8 +109,8 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                                 <span
                                                     className={`inline-flex items-center rounded-full px-2 py-1 text-xs ${
                                                         user.role === "admin"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : "bg-gray-100 text-gray-700"
+                                                            ? "bg-slate-200 text-[#141828] dark:bg-slate-200 dark:text-slate-900"
+                                                            : "bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-100"
                                                     }`}
                                                 >
                                                     {user.role || "user"}

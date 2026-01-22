@@ -9,7 +9,7 @@ import { fetchFilteredUsers } from "@/app/lib/data";
 import { AddUserButton } from "@/app/ui/users/buttons";
 
 export const metadata: Metadata = {
-    title: "Users | Acme Dashboard",
+    title: "Users | PrimeFlow Dashboard",
 };
 
 const ITEMS_PER_PAGE = 6;
