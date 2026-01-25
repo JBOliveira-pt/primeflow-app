@@ -6,6 +6,9 @@ export const metadata: Metadata = {
     title: "PrimeFlow Dashboard",
     description: "PrimeFlow finance operations dashboard.",
     metadataBase: new URL("https://next-learn-dashboard.vercel.sh"),
+    icons: {
+        icon: "/favicon-black.ico",
+    },
 };
 
 export default function RootLayout({
