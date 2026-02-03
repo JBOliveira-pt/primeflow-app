@@ -20,7 +20,7 @@ async function getUser(email: string): Promise<User | undefined> {
     }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
     providers: [
         Credentials({
@@ -38,7 +38,7 @@ export const { auth, signIn, signOut } = NextAuth({
                     if (!user) return null;
                     const passwordsMatch = await bcrypt.compare(
                         password,
-                        user.password
+                        user.password,
                     );
                     if (passwordsMatch) return user;
                 }
