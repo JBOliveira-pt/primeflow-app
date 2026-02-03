@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
+import { useActionState, Suspense } from "react";
 import { authenticate } from "@/app/lib/actions";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Eye, Github, Globe, Lock, Mail } from "lucide-react";
@@ -8,7 +8,7 @@ import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import Image from "next/image";
 
-const LoginView = ({ setView }: { setView: (v: "register") => void }) => {
+const LoginContent = ({ setView }: { setView: (v: "register") => void }) => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
@@ -120,15 +120,23 @@ const LoginView = ({ setView }: { setView: (v: "register") => void }) => {
               <Globe size={18} /> Google
             </button>
           </div>
-                   <p className="mt-8 text-center text-sm text-slate-500">
-        Não tem conta?{" "}
-        <button onClick={() => setView("register")} className="text-indigo-400 font-bold hover:underline">
-          Registre-se gratuitamente
-        </button>
-      </p>
+          <p className="mt-8 text-center text-sm text-slate-500">
+            Não tem conta?{" "}
+            <button onClick={() => setView("register")} type="button" className="text-indigo-400 font-bold hover:underline">
+              Registre-se gratuitamente
+            </button>
+          </p>
         </div>
       </form>
     </div>
+  );
+};
+
+const LoginView = (props: { setView: (v: "register") => void }) => {
+  return (
+    <Suspense fallback={<div className="text-white text-center p-4">Carregando...</div>}>
+      <LoginContent {...props} />
+    </Suspense>
   );
 };
 
