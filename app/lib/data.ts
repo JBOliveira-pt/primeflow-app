@@ -13,6 +13,8 @@ import { formatCurrency, formatDateToLocal } from "./utils";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
+const DEFAULT_AVATAR = "https://avatar.vercel.sh/placeholder.png";
+
 export async function fetchRevenue() {
     try {
         // Artificially delay a response for demo purposes.
@@ -36,17 +38,27 @@ export async function fetchLatestInvoices() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     try {
         const data = await sql<
-            (Omit<LatestInvoiceRaw, "image_url"> & { customer_id: string })[]
+            (Omit<LatestInvoiceRaw, "image_url"> & {
+                customer_id: string;
+                image_url: string | null;
+            })[]
         >`
-            SELECT invoices.amount, invoices.date, customers.name, customers.id as customer_id, customers.email, invoices.id
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      ORDER BY invoices.date DESC
-      LIMIT 5`;
+            SELECT 
+                invoices.amount, 
+                invoices.date, 
+                customers.name, 
+                customers.id as customer_id, 
+                customers.email, 
+                customers.image_url,
+                invoices.id
+            FROM invoices
+            JOIN customers ON invoices.customer_id = customers.id
+            ORDER BY invoices.date DESC
+            LIMIT 5`;
 
         const latestInvoices = data.map((invoice) => ({
             ...invoice,
-            image_url: `/api/image/customer/${invoice.customer_id}`,
+            image_url: invoice.image_url || DEFAULT_AVATAR,
             date: formatDateToLocal(invoice.date),
             amount: formatCurrency(invoice.amount),
         }));
@@ -102,7 +114,10 @@ export async function fetchFilteredInvoices(
 
     try {
         const invoices = await sql<
-            (Omit<InvoicesTable, "image_url"> & { customer_id: string })[]
+            (Omit<InvoicesTable, "image_url"> & {
+                customer_id: string;
+                image_url: string | null;
+            })[]
         >`
       SELECT
         invoices.id,
@@ -111,6 +126,7 @@ export async function fetchFilteredInvoices(
         invoices.status,
         customers.name,
         customers.email,
+        customers.image_url,
         invoices.customer_id
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
@@ -124,10 +140,10 @@ export async function fetchFilteredInvoices(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-        // Map to add image_url derived from customer_id
+        // Map to add fallback for missing images
         const invoicesWithImage = invoices.map((invoice) => ({
             ...invoice,
-            image_url: `/api/image/customer/${invoice.customer_id}`,
+            image_url: invoice.image_url || DEFAULT_AVATAR,
         }));
 
         return invoicesWithImage;
@@ -165,8 +181,8 @@ export async function fetchInvoiceById(id: string) {
         invoices.id,
         invoices.customer_id,
         invoices.amount,
-                invoices.status,
-                invoices.date
+        invoices.status,
+        invoices.date
       FROM invoices
       WHERE invoices.id = ${id};
     `;
@@ -176,7 +192,6 @@ export async function fetchInvoiceById(id: string) {
             // Convert amount from cents to dollars
             amount: invoice.amount / 100,
         }));
-        console.log(invoice); // Invoice is an empty array []
         return invoice[0];
     } catch (error) {
         console.error("Database Error:", error);
@@ -204,12 +219,16 @@ export async function fetchCustomers() {
 export async function fetchFilteredCustomers(query: string) {
     try {
         const data = await sql<
-            (Omit<CustomersTableType, "image_url"> & { id: string })[]
+            (Omit<CustomersTableType, "image_url"> & {
+                id: string;
+                image_url: string | null;
+            })[]
         >`
 		SELECT
 		  customers.id,
 		  customers.name,
 		  customers.email,
+		  customers.image_url,
           COUNT(invoices.id) AS total_invoices,
           COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
           COALESCE(SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END), 0) AS total_paid
@@ -218,13 +237,13 @@ export async function fetchFilteredCustomers(query: string) {
 		WHERE
 		  customers.name ILIKE ${`%${query}%`} OR
         customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email
+		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
 	  `;
 
         const customers = data.map((customer) => ({
             ...customer,
-            image_url: `/api/image/customer/${customer.id}`,
+            image_url: customer.image_url || DEFAULT_AVATAR,
             total_pending: formatCurrency(customer.total_pending),
             total_paid: formatCurrency(customer.total_paid),
         }));
