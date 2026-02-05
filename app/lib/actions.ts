@@ -11,6 +11,7 @@ import postgres from "postgres";
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import bcrypt from "bcrypt";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -82,6 +83,13 @@ export type CustomerState = {
 
 // Maximum photo size: 5MB
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+
+const SignUpSchema = z.object({
+    orgName: z.string().min(1, "Organization name is required"),
+    adminName: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 async function persistPhotoToR2(
     file: File | null,
@@ -251,6 +259,13 @@ export async function createCustomer(
     prevState: CustomerState,
     formData: FormData,
 ) {
+    const session = await auth();
+    const organizationId = (session?.user as any)?.organizationId;
+
+    if (!organizationId) {
+        return { message: "No organization found" };
+    }
+
     try {
         await checkAdminPermission();
     } catch (error) {
@@ -285,9 +300,9 @@ export async function createCustomer(
     let customerId: string;
     try {
         const result = await sql`
-      INSERT INTO customers (id, name, email)
-      VALUES (gen_random_uuid(), ${fullName}, ${email})
-      RETURNING id
+      INSERT INTO customers (id, name, email, organization_id)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${organizationId})
+            RETURNING id
     `;
         customerId = result[0].id;
     } catch (error) {
@@ -584,4 +599,74 @@ export async function deleteUser(id: string) {
     }
 
     revalidatePath("/dashboard/users");
+}
+
+export async function createOrganizationAndAdmin(formData: FormData) {
+    const validatedFields = SignUpSchema.safeParse({
+        orgName: formData.get("orgName"),
+        adminName: formData.get("adminName"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Invalid input",
+        };
+    }
+
+    const { orgName, adminName, email, password } = validatedFields.data;
+
+    try {
+        // 1. Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 2. Create organization
+        const orgSlug = orgName.toLowerCase().replace(/\s+/g, "-");
+
+        const orgResult = await sql`
+            INSERT INTO organizations (name, slug)
+            VALUES (${orgName}, ${orgSlug})
+            RETURNING id
+        `;
+
+        const organizationId = orgResult[0].id;
+
+        // 3. Create admin user
+        const userResult = await sql`
+            INSERT INTO users (name, email, password, role, organization_id)
+            VALUES (${adminName}, ${email}, ${hashedPassword}, 'admin', ${organizationId})
+            RETURNING id
+        `;
+
+        const userId = userResult[0].id;
+
+        // 4. Update organization with owner_id
+        await sql`
+            UPDATE organizations
+            SET owner_id = ${userId}
+            WHERE id = ${organizationId}
+        `;
+
+        return {
+            success: true,
+            message: "Organization created successfully!",
+        };
+    } catch (error: any) {
+        if (error.code === "23505") {
+            // Unique violation
+            return {
+                success: false,
+                message: "Email or organization name already exists",
+            };
+        }
+
+        console.error("SignUp error:", error);
+        return {
+            success: false,
+            message: "Failed to create organization",
+        };
+    }
 }

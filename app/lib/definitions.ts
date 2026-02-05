@@ -9,6 +9,7 @@ export type User = {
     password: string;
     image_url: string;
     role?: "admin" | "user";
+    organization_id?: string;
 };
 
 export type Customer = {

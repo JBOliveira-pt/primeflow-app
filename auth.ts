@@ -12,7 +12,7 @@ async function getUser(email: string): Promise<User | undefined> {
     try {
         const user = await sql<
             User[]
-        >`SELECT id, name, email, password, role FROM users WHERE email=${email}`;
+        >`SELECT id, name, email, password, role, organization_id FROM users WHERE email=${email}`;
         return user[0];
     } catch (error) {
         console.error("Failed to fetch user:", error);
@@ -52,12 +52,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async jwt({ token, user }) {
             if (user) {
                 token.role = (user as any).role || "user";
+                token.organizationId = (user as any).organization_id; // ⭐ ADICIONAR
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
                 (session.user as any).role = token.role;
+                (session.user as any).organizationId = token.organizationId; // ⭐ ADICIONAR
             }
             return session;
         },
