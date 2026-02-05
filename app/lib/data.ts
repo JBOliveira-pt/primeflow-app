@@ -238,21 +238,14 @@ export async function fetchFilteredCustomers(query: string) {
 
 export async function fetchCustomerById(id: string) {
     try {
-        const data = await sql<
-            (Omit<Customer, "image_url"> & { id: string })[]
-        >`
-      SELECT id, name, email
+        const data = await sql<Customer[]>`
+      SELECT id, name, email, image_url
       FROM customers
       WHERE id = ${id}
     `;
 
         const customer = data[0];
-        return customer
-            ? {
-                  ...customer,
-                  image_url: `/api/image/customer/${customer.id}`,
-              }
-            : undefined;
+        return customer || undefined;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch customer.");
@@ -261,39 +254,31 @@ export async function fetchCustomerById(id: string) {
 
 export async function fetchFilteredUsers(query: string) {
     try {
-        const data = await sql<Omit<User, "image_url" | "password">[]>`
-            SELECT id, name, email, role
-            FROM users
-            WHERE
-                name ILIKE ${`%${query}%`} OR
-                email ILIKE ${`%${query}%`}
-            ORDER BY name ASC
-        `;
+        const data = await sql<User[]>`
+      SELECT id, name, email, role, image_url
+      FROM users
+      WHERE
+        name ILIKE ${`%${query}%`} OR
+        email ILIKE ${`%${query}%`}
+      ORDER BY name ASC
+    `;
 
-        const usersWithImage = data.map((user) => ({
-            ...user,
-            image_url: `/api/image/user/${user.id}`,
-        }));
-
-        return usersWithImage as unknown as User[];
-    } catch (err) {
-        console.error("Database Error:", err);
+        return data;
+    } catch (error) {
+        console.error("Database Error:", error);
         throw new Error("Failed to fetch users table.");
     }
 }
 
 export async function fetchUserById(id: string) {
     try {
-        const data = await sql<Omit<User, "image_url">[]>`
-            SELECT id, name, email, password, role
-            FROM users
-            WHERE id = ${id}
-        `;
+        const data = await sql<User[]>`
+      SELECT id, name, email, password, role, image_url
+      FROM users
+      WHERE id = ${id}
+    `;
 
-        const user = data[0];
-        return user
-            ? { ...user, image_url: `/api/image/user/${user.id}` }
-            : undefined;
+        return data[0] || undefined;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch user.");

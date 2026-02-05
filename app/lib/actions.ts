@@ -1,5 +1,6 @@
 "use server";
 
+import { uploadImageToR2, deleteImageFromR2 } from "./r2-storage";
 import { signIn, auth } from "@/auth";
 import { AuthError } from "next-auth";
 
@@ -82,11 +83,11 @@ export type CustomerState = {
 // Maximum photo size: 5MB
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
 
-async function persistPhotoToDatabase(
+async function persistPhotoToR2(
     file: File | null,
     entityType: "customer" | "user",
     entityId: string,
-) {
+): Promise<string | null> {
     if (!file || file.size === 0) {
         return null;
     }
@@ -97,31 +98,32 @@ async function persistPhotoToDatabase(
         );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Upload to R2
+    const imageUrl = await uploadImageToR2(file, entityType, entityId);
 
-    // Insert photo into the database
+    // Update database with R2 URL
     const tableName = entityType === "customer" ? "customers" : "users";
     await sql`
-        UPDATE ${sql(tableName)}
-        SET photo = ${buffer}
-        WHERE id = ${entityId}
-    `;
+    UPDATE ${sql(tableName)}
+    SET image_url = ${imageUrl}
+    WHERE id = ${entityId}
+  `;
 
-    return `/api/image/${entityType}/${entityId}`;
+    return imageUrl;
 }
 
 async function saveCustomerPhoto(
     file: File | null,
     customerId: string,
 ): Promise<string | null> {
-    return persistPhotoToDatabase(file, "customer", customerId);
+    return persistPhotoToR2(file, "customer", customerId);
 }
 
 async function saveUserPhoto(
     file: File | null,
     userId: string,
 ): Promise<string | null> {
-    return persistPhotoToDatabase(file, "user", userId);
+    return persistPhotoToR2(file, "user", userId);
 }
 
 export async function authenticate(
