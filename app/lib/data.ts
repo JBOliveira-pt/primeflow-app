@@ -3,6 +3,7 @@ import {
     Customer,
     CustomerField,
     CustomersTableType,
+    FormattedCustomersTable,
     InvoiceForm,
     InvoicesTable,
     LatestInvoiceRaw,
@@ -229,29 +230,43 @@ export async function fetchCustomers() {
     }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(
+    query: string,
+): Promise<FormattedCustomersTable[]> {
     const organizationId = await getOrganizationId();
 
     try {
-        const data = await sql<CustomersTableType[]>`
-            SELECT
-              customers.id,
-              customers.name,
-              customers.email,
-              customers.image_url,
-              COUNT(invoices.id) AS total_invoices,
-              COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
-              COALESCE(SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END), 0) AS total_paid
-            FROM customers
-            LEFT JOIN invoices ON customers.id = invoices.customer_id
-            WHERE 
-              customers.organization_id = ${organizationId}
-              AND (customers.name ILIKE ${`%${query}%`} OR customers.email ILIKE ${`%${query}%`})
-            GROUP BY customers.id, customers.name, customers.email, customers.image_url
-            ORDER BY customers.name ASC
-        `;
+        const data = await sql<
+            (Omit<CustomersTableType, "image_url"> & {
+                id: string;
+                image_url: string | null;
+            })[]
+        >`
+		SELECT
+		  customers.id,
+		  customers.name,
+		  customers.email,
+		  customers.image_url,
+          COUNT(invoices.id) AS total_invoices,
+          COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
+          COALESCE(SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END), 0) AS total_paid
+		FROM customers
+		LEFT JOIN invoices ON customers.id = invoices.customer_id
+		WHERE
+		  customers.organization_id = ${organizationId}
+		  AND (customers.name ILIKE ${`%${query}%`} OR customers.email ILIKE ${`%${query}%`})
+		GROUP BY customers.id, customers.name, customers.email, customers.image_url
+		ORDER BY customers.name ASC
+	  `;
 
-        return data;
+        const customers: FormattedCustomersTable[] = data.map((customer) => ({
+            ...customer,
+            image_url: customer.image_url || DEFAULT_AVATAR,
+            total_pending: formatCurrency(customer.total_pending),
+            total_paid: formatCurrency(customer.total_paid),
+        }));
+
+        return customers;
     } catch (err) {
         console.error("Database Error:", err);
         throw new Error("Failed to fetch customer table.");
