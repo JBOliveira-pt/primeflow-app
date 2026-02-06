@@ -122,9 +122,7 @@ const LoginContent = ({ setView }: { setView: (v: "register") => void }) => {
           </div>
           <p className="mt-8 text-center text-sm text-slate-500">
             Não tem conta?{" "}
-            <button onClick={() => setView("register")} type="button" className="text-indigo-400 font-bold hover:underline">
-              Registre-se gratuitamente
-            </button>
+            <Link href="/login?view=register">Registre-se gratuitamente</Link>
           </p>
         </div>
       </form>
