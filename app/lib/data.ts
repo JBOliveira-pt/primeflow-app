@@ -1,13 +1,14 @@
 import postgres from "postgres";
 import {
-    Customer,
+   Customer,
     CustomerField,
     CustomersTableType,
+    FormattedCustomersTable,
     InvoiceForm,
     InvoicesTable,
     LatestInvoiceRaw,
     Revenue,
-    User,
+    User, 
 } from "./definitions";
 import { formatCurrency, formatDateToLocal } from "./utils";
 import { auth } from "@/auth";
@@ -229,10 +230,11 @@ export async function fetchCustomers() {
     }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(query: string): Promise<FormattedCustomersTable[]> {
     const organizationId = await getOrganizationId();
 
     try {
+        // O banco retorna números
         const data = await sql<CustomersTableType[]>`
             SELECT
               customers.id,
@@ -250,8 +252,17 @@ export async function fetchFilteredCustomers(query: string) {
             GROUP BY customers.id, customers.name, customers.email, customers.image_url
             ORDER BY customers.name ASC
         `;
+         const formattedCustomers: FormattedCustomersTable[] = data.map((customer) => ({
+            id: customer.id,
+            name: customer.name,
+            email: customer.email,
+            image_url: customer.image_url || DEFAULT_AVATAR,
+            total_invoices: Number(customer.total_invoices),
+            total_pending: formatCurrency(customer.total_pending),
+            total_paid: formatCurrency(customer.total_paid),
+        }));
 
-        return data;
+        return formattedCustomers;  
     } catch (err) {
         console.error("Database Error:", err);
         throw new Error("Failed to fetch customer table.");

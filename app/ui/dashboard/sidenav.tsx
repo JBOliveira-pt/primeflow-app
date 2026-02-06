@@ -1,35 +1,146 @@
+"use client";
+
+import {
+  LogOut,
+  User,
+  Users,
+  History,
+  Home,
+  Menu,
+  X,
+} from "lucide-react";
 import Link from "next/link";
-import NavLinks from "@/app/ui/dashboard/nav-links";
 import AcmeLogo from "@/app/ui/acme-logo";
-import { PowerIcon } from "@heroicons/react/24/outline";
-import { signOut } from "@/auth";
+import { signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 export default function SideNav() {
-    return (
-        <div className="flex h-full flex-col px-3 py-4 md:px-2">
-            <Link
-                className="mb-2 flex h-20 items-end justify-start rounded-md bg-[#141828] p-4 text-white transition-colors hover:bg-slate-800 md:h-40"
-                href="/"
-            >
-                <div className="w-32 text-white md:w-40">
-                    <AcmeLogo />
-                </div>
-            </Link>
-            <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
-                <NavLinks />
-                <div className="hidden h-auto w-full grow rounded-md bg-gray-50 dark:bg-slate-900 md:block"></div>
-                <form
-                    action={async () => {
-                        "use server";
-                        await signOut({ redirectTo: "/" });
-                    }}
-                >
-                    <button className="flex h-[48px] w-full grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-[#141828] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#141828] dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white md:flex-none md:justify-start md:p-2 md:px-3">
-                        <PowerIcon className="w-6" />
-                        <div className="hidden md:block">Sign Out</div>
-                    </button>
-                </form>
-            </div>
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      {/* Botão Mobile - Visível apenas em telas pequenas */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-950 text-white rounded-lg border border-gray-800 hover:bg-gray-900 transition-colors"
+        aria-label="Toggle menu"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Overlay - Visível apenas no mobile quando o menu está aberto */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          w-64 lg:w-70 
+          bg-gray-950 text-white 
+          flex flex-col 
+          border-r border-gray-800 
+          h-full
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-10 mt-16 lg:mt-8 px-6">
+          <div className="w-10 h-10 flex items-center justify-center">
+            <AcmeLogo />
+          </div>
+          <div className="text-xl font-bold">
+            <p>PrimeFLOW</p>
+          </div>
         </div>
-    );
+
+        {/* Navigation */}
+        <nav className="flex flex-col h-full gap-2 px-3">
+          <NavItem
+            icon={<Home size={20} />}
+            label="Home"
+            href="/dashboard"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <NavItem
+            href="/dashboard/invoices"
+            icon={<User size={20} />}
+            label="Invoices"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <NavItem
+            href="/dashboard/customers"
+            icon={<History size={20} />}
+            label="Customers"
+            onClick={() => setIsOpen(false)}
+          />
+
+          <NavItem
+            href="/dashboard/users"
+            icon={<Users size={20} />}
+            label="Users"
+            onClick={() => setIsOpen(false)}
+          />
+        </nav>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={() => {
+            setIsOpen(false);
+            signOut({ callbackUrl: "/login" });
+          }}
+          className="flex items-center gap-3 text-red-400 hover:text-red-300 transition w-full p-3 mx-3 rounded-xl hover:bg-red-500/10 mt-auto mb-4"
+        >
+          <LogOut size={20} />
+          <span>Sign Out</span>
+        </button>
+      </aside>
+    </>
+  );
+}
+
+function NavItem({
+  href,
+  icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
+  const pathname = usePathname();
+  const active = pathname === href || pathname.startsWith(`${href}/`);
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 group ${
+        active
+          ? "bg-blue-600/10 text-blue-400 border-r-2 border-blue-500"
+          : "text-gray-400 hover:bg-gray-900 hover:text-gray-100"
+      }`}
+    >
+      <span
+        className={
+          active
+            ? "text-blue-400"
+            : "text-gray-500 group-hover:text-white transition-colors"
+        }
+      >
+        {icon}
+      </span>
+      <span className="font-medium">{label}</span>
+    </Link>
+  );
 }

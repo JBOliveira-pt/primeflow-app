@@ -16,7 +16,7 @@ const LoginContent = ({ setView }: { setView: (v: "register") => void }) => {
   return (
     <div className="w-full max-w-md">
       <Link
-        href="/"
+        href="https://primeflow-landing.vercel.app"
         className="mb-8 flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
       >
         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
