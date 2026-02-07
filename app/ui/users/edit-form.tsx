@@ -1,6 +1,8 @@
+// app/ui/users/edit-form.tsx
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/app/ui/button";
 import { useActionState, useState, ChangeEvent } from "react";
 import { updateUser, UserState } from "@/app/lib/actions";
@@ -10,6 +12,10 @@ import {
     PhotoIcon,
     UserIcon,
     KeyIcon,
+    XMarkIcon,
+    PencilIcon,
+    ShieldCheckIcon,
+    ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
 const initialState: UserState = { message: null, errors: {} };
@@ -37,16 +43,73 @@ export default function EditUserForm({ user }: { user: User }) {
         }
     }
 
+    const resetImage = () => {
+        setPreview(null);
+        const input = document.getElementById('imageFile') as HTMLInputElement;
+        if (input) input.value = '';
+    };
+
+    // Helper function para renderizar erros
+    const renderErrors = (errors: string[] | undefined) => {
+        if (!errors || !Array.isArray(errors)) return null;
+        return errors.map((error) => (
+            <p key={error} className="text-sm text-red-400">
+                {error}
+            </p>
+        ));
+    };
+
     return (
         <form action={formAction}>
-            <div className="rounded-md bg-gray-50 p-4 md:p-6">
-                <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 md:p-8">
+                {/* Form Header */}
+                <div className="mb-6 pb-6 border-b border-gray-800">
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <Image
+                                src={preview || user.image_url}
+                                alt={user.name}
+                                width={56}
+                                height={56}
+                                className="rounded-full ring-2 ring-gray-700 object-cover"
+                                style={{ aspectRatio: "1 / 1" }}
+                            />
+                            {preview && (
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900" />
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white">
+                                Editar Usuário
+                            </h3>
+                            <p className="text-sm text-gray-400 mt-0.5">
+                                {user.email}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${
+                                user.role === 'admin' 
+                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
+                                    : 'bg-gray-800 text-gray-400 border-gray-700'
+                            }`}>
+                                {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                            </span>
+                            <span className="px-2.5 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">
+                                ID: {user.id.slice(0, 8)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Name Fields */}
+                <div className="grid gap-6 md:grid-cols-2 mb-6">
+                    {/* First Name */}
                     <div className="space-y-2">
                         <label
                             htmlFor="firstName"
-                            className="block text-sm font-medium"
+                            className="block text-sm font-medium text-gray-300"
                         >
-                            First name
+                            Primeiro Nome
                         </label>
                         <div className="relative">
                             <input
@@ -54,30 +117,24 @@ export default function EditUserForm({ user }: { user: User }) {
                                 name="firstName"
                                 type="text"
                                 defaultValue={firstName}
-                                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                                className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                placeholder="João"
                                 aria-describedby="firstName-error"
                             />
-                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div
-                            id="firstName-error"
-                            aria-live="polite"
-                            aria-atomic="true"
-                        >
-                            {state.errors?.firstName?.map((error) => (
-                                <p key={error} className="text-sm text-red-500">
-                                    {error}
-                                </p>
-                            ))}
+                        <div id="firstName-error" aria-live="polite" aria-atomic="true">
+                            {renderErrors(state.errors?.firstName)}
                         </div>
                     </div>
 
+                    {/* Last Name */}
                     <div className="space-y-2">
                         <label
                             htmlFor="lastName"
-                            className="block text-sm font-medium"
+                            className="block text-sm font-medium text-gray-300"
                         >
-                            Last name
+                            Sobrenome
                         </label>
                         <div className="relative">
                             <input
@@ -85,29 +142,23 @@ export default function EditUserForm({ user }: { user: User }) {
                                 name="lastName"
                                 type="text"
                                 defaultValue={lastName}
-                                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                                className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                placeholder="Silva"
                                 aria-describedby="lastName-error"
                             />
-                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div
-                            id="lastName-error"
-                            aria-live="polite"
-                            aria-atomic="true"
-                        >
-                            {state.errors?.lastName?.map((error) => (
-                                <p key={error} className="text-sm text-red-500">
-                                    {error}
-                                </p>
-                            ))}
+                        <div id="lastName-error" aria-live="polite" aria-atomic="true">
+                            {renderErrors(state.errors?.lastName)}
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-4 space-y-2">
+                {/* Email */}
+                <div className="mb-6 space-y-2">
                     <label
                         htmlFor="email"
-                        className="block text-sm font-medium"
+                        className="block text-sm font-medium text-gray-300"
                     >
                         Email
                     </label>
@@ -117,116 +168,162 @@ export default function EditUserForm({ user }: { user: User }) {
                             name="email"
                             type="email"
                             defaultValue={user.email}
-                            className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+                            className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="joao.silva@example.com"
                             aria-describedby="email-error"
                         />
-                        <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+                        <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
                     <div id="email-error" aria-live="polite" aria-atomic="true">
-                        {state.errors?.email?.map((error) => (
-                            <p key={error} className="text-sm text-red-500">
-                                {error}
-                            </p>
-                        ))}
+                        {renderErrors(state.errors?.email)}
                     </div>
                 </div>
 
-                <div className="mt-4 space-y-2">
+                {/* Password */}
+                <div className="mb-6 space-y-2">
                     <label
                         htmlFor="password"
-                        className="block text-sm font-medium"
+                        className="block text-sm font-medium text-gray-300"
                     >
-                        Password (leave blank to keep current)
+                        Nova Senha
+                        <span className="text-gray-500 font-normal ml-1">(deixe em branco para manter a atual)</span>
                     </label>
                     <div className="relative">
                         <input
                             id="password"
                             name="password"
                             type="password"
-                            className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                            placeholder="Enter new password"
+                            className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="Digite a nova senha"
                             aria-describedby="password-error"
                         />
-                        <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+                        <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
-                    <div
-                        id="password-error"
-                        aria-live="polite"
-                        aria-atomic="true"
-                    >
-                        {state.errors?.password?.map((error) => (
-                            <p key={error} className="text-sm text-red-500">
-                                {error}
-                            </p>
-                        ))}
+                    <div id="password-error" aria-live="polite" aria-atomic="true">
+                        {renderErrors(state.errors?.password)}
                     </div>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                    <label
-                        htmlFor="imageFile"
-                        className="block text-sm font-medium"
-                    >
-                        Photo
+                {/* Image Upload */}
+                <div className="mb-6 space-y-3">
+                    <label className="block text-sm font-medium text-gray-300">
+                        Foto do Usuário
                     </label>
-                    <div className="flex items-center gap-4">
-                        <img
-                            src={preview ?? `/api/image/user/${user.id}`}
-                            alt="User avatar preview"
-                            className="h-16 w-16 rounded-full object-cover border border-gray-200"
-                        />
-                        <div className="text-xs text-gray-500">
-                            {preview ? "Preview da nova foto" : "Foto atual"}
+                    
+                    <div className="flex items-start gap-4">
+                        {/* Current/Preview Image */}
+                        <div className="relative shrink-0">
+                            <Image
+                                src={preview || user.image_url}
+                                alt={user.name}
+                                width={80}
+                                height={80}
+                                className="rounded-lg ring-2 ring-gray-700 object-cover"
+                                style={{ aspectRatio: "1 / 1" }}
+                            />
+                            {preview && (
+                                <button
+                                    type="button"
+                                    onClick={resetImage}
+                                    className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                                >
+                                    <XMarkIcon className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Upload Area */}
+                        <div className="flex-1">
+                            <label
+                                htmlFor="imageFile"
+                                className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-gray-800 hover:bg-gray-800/80 hover:border-blue-500/50 transition-all group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <ArrowPathIcon className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                                    <div>
+                                        <p className="text-sm text-gray-400">
+                                            <span className="font-medium text-gray-300">Alterar foto</span>
+                                        </p>
+                                        <p className="text-xs text-gray-500">PNG, JPG ou GIF (MAX. 2MB)</p>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <input
+                                id="imageFile"
+                                name="imageFile"
+                                type="file"
+                                accept="image/*"
+                                onChange={onFileChange}
+                                className="hidden"
+                            />
                         </div>
                     </div>
-                    <input
-                        id="imageFile"
-                        name="imageFile"
-                        type="file"
-                        accept="image/*"
-                        onChange={onFileChange}
-                        className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-gray-200 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-700 hover:file:bg-gray-300"
-                    />
-                    <p className="text-xs text-gray-500">
-                        Upload a new photo (optional).
-                    </p>
-                </div>
 
-                <div className="mt-4 space-y-2">
-                    <label htmlFor="role" className="block text-sm font-medium">
-                        Role
-                    </label>
-                    <select
-                        id="role"
-                        name="role"
-                        className="peer block w-full rounded-md border border-gray-200 py-2 pl-3 text-sm outline-2"
-                        defaultValue={user.role || "user"}
-                        aria-describedby="role-error"
-                    >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <div id="role-error" aria-live="polite" aria-atomic="true">
-                        {state.errors?.role?.map((error) => (
-                            <p key={error} className="text-sm text-red-500">
-                                {error}
-                            </p>
-                        ))}
+                    {preview && (
+                        <p className="text-xs text-green-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                            Nova imagem selecionada
+                        </p>
+                    )}
+
+                    <div id="image-error" aria-live="polite" aria-atomic="true">
+                        {renderErrors(state.errors?.imageFile)}
                     </div>
                 </div>
 
-                {state.message ? (
-                    <p className="mt-4 text-sm text-red-500">{state.message}</p>
-                ) : null}
+                {/* Role */}
+                <div className="space-y-2">
+                    <label
+                        htmlFor="role"
+                        className="block text-sm font-medium text-gray-300"
+                    >
+                        Função
+                    </label>
+                    <div className="relative">
+                        <select
+                            id="role"
+                            name="role"
+                            className="peer block w-full cursor-pointer rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none"
+                            defaultValue={user.role || "user"}
+                            aria-describedby="role-error"
+                        >
+                            <option value="user" className="bg-gray-800">Usuário</option>
+                            <option value="admin" className="bg-gray-800">Administrador</option>
+                        </select>
+                        <ShieldCheckIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="role-error" aria-live="polite" aria-atomic="true">
+                        {renderErrors(state.errors?.role)}
+                    </div>
+                </div>
+
+                {/* Error Message */}
+                {state.message && (
+                    <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/50 p-4">
+                        <p className="text-sm text-red-400">{state.message}</p>
+                    </div>
+                )}
             </div>
-            <div className="mt-6 flex justify-end gap-4">
+
+            {/* Form Actions */}
+            <div className="mt-6 flex items-center justify-end gap-4">
                 <Link
                     href="/dashboard/users"
-                    className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                    className="flex h-10 items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-4 text-sm font-medium text-gray-300 transition-all hover:bg-gray-700 hover:text-white"
                 >
-                    Cancel
+                    <XMarkIcon className="h-4 w-4" />
+                    Cancelar
                 </Link>
-                <Button type="submit">Update User</Button>
+                <Button type="submit">
+                    <PencilIcon className="h-4 w-4" />
+                    Salvar Alterações
+                </Button>
             </div>
         </form>
     );

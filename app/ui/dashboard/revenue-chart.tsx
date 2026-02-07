@@ -1,68 +1,146 @@
+// app/ui/dashboard/revenue-chart.tsx
 import { generateYAxis } from "@/app/lib/utils";
-import { CalendarIcon } from "@heroicons/react/24/outline";
-import { lusitana, openSans } from "@/app/ui/fonts";
+import { CalendarIcon, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Revenue } from "@/app/lib/definitions";
 import { fetchRevenue } from "@/app/lib/data";
 
-// This component is representational only.
-// For data visualization UI, check out:
-// https://www.tremor.so/
-// https://www.chartjs.org/
-// https://airbnb.io/visx/
-
 export default async function RevenueChart() {
-    // Make component async, remove the props
-    const revenue = await fetchRevenue(); // Fetch data inside the component
+    const revenue = await fetchRevenue();
 
     const chartHeight = 350;
     const { yAxisLabels, topLabel } = generateYAxis(revenue);
 
     if (!revenue || revenue.length === 0) {
-        return <p className="mt-4 text-gray-400">No data available.</p>;
+        return (
+            <div className="w-full md:col-span-4">
+                <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 h-[450px] flex items-center justify-center">
+                    <p className="text-gray-500">Nenhum dado disponível</p>
+                </div>
+            </div>
+        );
     }
+
+    // Calcular o total e a média
+    const totalRevenue = revenue.reduce((sum, month) => sum + month.revenue, 0);
+    const averageRevenue = totalRevenue / revenue.length;
+    
+    // Pegar o último mês e calcular crescimento
+    const lastMonth = revenue[revenue.length - 1];
+    const previousMonth = revenue[revenue.length - 2];
+    const growth = previousMonth 
+        ? ((lastMonth.revenue - previousMonth.revenue) / previousMonth.revenue * 100).toFixed(1)
+        : 0;
 
     return (
         <div className="w-full md:col-span-4">
-            <h2 className={`mb-4 text-3xl lg:text-xl font-bold`}>
-                Recent Revenue
-            </h2>
-            {/* NOTE: Uncomment this code in Chapter 7 */}
-            
-            <div className="rounded-xl bg-gray-900 border-gray-800 p-4">
-                <div className="sm:grid-cols-13 mt-0 grid grid-cols-12 items-end gap-2 rounded-md p-4 md:gap-4">
-                    <div
-                        className="mb-6 hidden flex-col justify-between text-sm text-gray-400 sm:flex"
-                        style={{ height: `${chartHeight}px` }}
-                    >
-                        {yAxisLabels.map((label) => (
-                            <p key={label}>{label}</p>
-                        ))}
+            {/* Header com título e métricas */}
+            <div className="mb-4 flex items-start justify-between">
+                <div>
+                    <h2 className="text-xl font-bold text-white">
+                        Receita Recente
+                    </h2>
+                    <p className="text-sm text-gray-400 mt-1">
+                        Últimos 12 meses
+                    </p>
+                </div>
+                {growth != 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10">
+                        <ArrowUpRight className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-medium text-green-500">
+                            {growth}%
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 hover:border-gray-700 transition-colors">
+                {/* Métricas rápidas */}
+                <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-800">
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider">Total</p>
+                        <p className="text-lg font-bold text-white">
+                            € {(totalRevenue / 1000).toFixed(3)}K
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider">Média</p>
+                        <p className="text-lg font-bold text-white">
+                            € {(averageRevenue / 1000).toFixed(3)}K
+                        </p>
+                    </div>
+                </div>
+
+                {/* Gráfico de Barras */}
+                <div className="relative">
+                    <div className="sm:grid-cols-13 mt-0 grid grid-cols-12 items-end gap-1 md:gap-2" 
+                         style={{ height: `${chartHeight}px` }}>
+                        
+                        {/* Eixo Y - Labels */}
+                        <div
+                            className="mb-6 hidden flex-col justify-between text-xs text-gray-500 sm:flex col-span-1"
+                            style={{ height: `${chartHeight - 24}px` }}
+                        >
+                            {yAxisLabels.map((label) => (
+                                <p key={label} className="text-right">
+                                    {label}
+                                </p>
+                            ))}
+                        </div>
+
+                        {/* Barras */}
+                        {revenue.map((month, index) => {
+                            const barHeight = (chartHeight / topLabel) * month.revenue;
+                            const isLastMonth = index === revenue.length - 1;
+                            
+                            return (
+                                <div
+                                    key={month.month}
+                                    className="flex flex-col items-center gap-2 relative group"
+                                >
+                                    {/* Tooltip on hover */}
+                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                        R$ {(month.revenue / 1000).toFixed(1)}K
+                                    </div>
+                                    
+                                    {/* Barra */}
+                                    <div
+                                        className={`
+                                            w-full rounded-t-md transition-all duration-300 cursor-pointer
+                                            ${isLastMonth 
+                                                ? 'bg-gradient-to-t from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20' 
+                                                : 'bg-gradient-to-t from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500'
+                                            }
+                                        `}
+                                        style={{ height: `${barHeight}px` }}
+                                    />
+                                    
+                                    {/* Label do mês */}
+                                    <p className="text-xs text-gray-500 -rotate-45 sm:rotate-0 mt-1">
+                                        {month.month}
+                                    </p>
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    {revenue.map((month) => (
-                        <div
-                            key={month.month}
-                            className="flex flex-col items-center gap-2"
-                        >
-                            <div
-                                className="w-full rounded-md bg-[#141828] dark:bg-slate-200"
-                                style={{
-                                    height: `${
-                                        (chartHeight / topLabel) * month.revenue
-                                    }px`,
-                                }}
-                            ></div>
-                            <p className="-rotate-90 text-sm text-gray-400 sm:rotate-0">
-                                {month.month}
-                            </p>
-                        </div>
-                    ))}
+                    {/* Linha de base */}
+                    <div className="absolute bottom-6 left-8 right-0 h-px bg-gray-800"></div>
                 </div>
-                <div className="flex items-center pb-2 pt-6">
-                    <CalendarIcon className="h-5 w-5 text-gray-500" />
-                    <h3 className="ml-2 text-sm text-gray-500 ">
-                        Last 12 months
-                    </h3>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-6 mt-4 border-t border-gray-800">
+                    <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs text-gray-500">
+                            Dados atualizados mensalmente
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                        <span className="text-xs text-gray-500">
+                            Tendência positiva
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

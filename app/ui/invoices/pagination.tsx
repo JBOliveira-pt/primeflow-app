@@ -1,3 +1,4 @@
+// app/ui/invoices/pagination.tsx
 "use client";
 
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
@@ -17,22 +18,23 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
         return `${pathname}?${params.toString()}`;
     };
 
-    // NOTE: Uncomment this code in Chapter 10
-
     const allPages = generatePagination(currentPage, totalPages);
 
     return (
-        <>
-            {/*  NOTE: Uncomment this code in Chapter 10 */}
+        <div className="flex flex-col items-center justify-center gap-2">
+            {/* Info de páginas */}
+            <span className="hidden sm:block text-sm text-gray-500 mr-4">
+                Página {currentPage} de {totalPages}
+            </span>
 
-            <div className="inline-flex">
+            <div className="inline-flex items-center gap-1">
                 <PaginationArrow
                     direction="left"
                     href={createPageURL(currentPage - 1)}
                     isDisabled={currentPage <= 1}
                 />
 
-                <div className="flex -space-x-px">
+                <div className="flex gap-1">
                     {allPages.map((page, index) => {
                         let position:
                             | "first"
@@ -64,7 +66,7 @@ export default function Pagination({ totalPages }: { totalPages: number }) {
                     isDisabled={currentPage >= totalPages}
                 />
             </div>
-        </>
+        </div>
     );
 }
 
@@ -80,14 +82,15 @@ function PaginationNumber({
     isActive: boolean;
 }) {
     const className = clsx(
-        "flex h-10 w-10 items-center justify-center text-sm border",
+        "flex h-10 w-10 items-center justify-center text-sm font-medium rounded-lg transition-all",
         {
-            "rounded-l-md": position === "first" || position === "single",
-            "rounded-r-md": position === "last" || position === "single",
-            "z-10 bg-[#141828] border-[#141828] text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900":
-                isActive,
-            "hover:bg-gray-100": !isActive && position !== "middle",
-            "text-gray-300": position === "middle",
+            // Active state - destaque azul
+            "bg-blue-600 text-white shadow-lg shadow-blue-600/25": isActive,
+            // Hover state para números normais
+            "text-gray-400 hover:bg-gray-800 hover:text-white border border-transparent hover:border-gray-700": 
+                !isActive && position !== "middle",
+            // Ellipsis (...)
+            "text-gray-600 cursor-default pointer-events-none": position === "middle",
         },
     );
 
@@ -110,20 +113,23 @@ function PaginationArrow({
     isDisabled?: boolean;
 }) {
     const className = clsx(
-        "flex h-10 w-10 items-center justify-center rounded-md border",
+        "flex h-10 w-10 items-center justify-center rounded-lg border transition-all",
         {
-            "pointer-events-none text-gray-300": isDisabled,
-            "hover:bg-gray-100": !isDisabled,
-            "mr-2 md:mr-4": direction === "left",
-            "ml-2 md:ml-4": direction === "right",
+            // Disabled state
+            "pointer-events-none border-gray-800 text-gray-700 cursor-not-allowed": isDisabled,
+            // Normal state
+            "border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white hover:border-gray-600": !isDisabled,
+            // Spacing
+            "mr-2": direction === "left",
+            "ml-2": direction === "right",
         },
     );
 
     const icon =
         direction === "left" ? (
-            <ArrowLeftIcon className="w-4" />
+            <ArrowLeftIcon className="w-4 h-4" />
         ) : (
-            <ArrowRightIcon className="w-4" />
+            <ArrowRightIcon className="w-4 h-4" />
         );
 
     return isDisabled ? (

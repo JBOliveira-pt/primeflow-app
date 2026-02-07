@@ -1,6 +1,5 @@
 import SideNav from "@/app/ui/dashboard/sidenav";
 import { Metadata } from "next";
-
 export const metadata: Metadata = {
     title: {
         template: "%s | PrimeFlow Dashboard",
@@ -12,13 +11,13 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
-            <div className="w-full flex-none md:w-64">
+        <div className="flex h-screen bg-gray-900">
                 <SideNav />
-            </div>
-            <div className="grow p-6 md:overflow-y-auto md:p-12">
-                {children}
-            </div>
+            <main className="flex-1 overflow-y-auto lg:ml-64 mt-20">
+                <div className="">
+                    {children}
+                </div>
+            </main>
         </div>
     );
 }

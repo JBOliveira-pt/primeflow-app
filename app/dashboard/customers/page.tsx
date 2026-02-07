@@ -7,6 +7,7 @@ import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Metadata } from "next";
 import { fetchFilteredCustomers } from "@/app/lib/data";
 import { AddCustomerButton } from "@/app/ui/customers/buttons";
+import { FormattedCustomersTable } from "@/app/lib/definitions"
 
 export const metadata: Metadata = {
     title: "Customers | PrimeFlow Dashboard",
@@ -24,7 +25,7 @@ export default async function Page(props: {
     const query = searchParams?.query || "";
     const currentPage = Number(searchParams?.page) || 1;
 
-    const customers = await fetchFilteredCustomers(query);
+    const customers: FormattedCustomersTable[] = await fetchFilteredCustomers(query);
     const totalPages = Math.ceil(customers.length / ITEMS_PER_PAGE);
 
     const paginatedCustomers = customers.slice(
@@ -33,9 +34,10 @@ export default async function Page(props: {
     );
 
     return (
-        <div className="w-full">
-            <div className="flex w-full items-center justify-between">
-                <h1 className={`${lusitana.className} text-2xl`}>Customers</h1>
+        <div className="w-full p-6">
+            <div className="flex flex-col w-full justify-between">
+                <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-white">Clientes</h1>
+                <p className="text-sm text-gray-400">Gerencie seus clientes</p>
             </div>
             <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
                 <Search placeholder="Search customers..." />

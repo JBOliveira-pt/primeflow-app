@@ -1,3 +1,4 @@
+// app/ui/invoices/table.tsx
 import Image from "next/image";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
@@ -16,26 +17,29 @@ export default async function InvoicesTable({
     return (
         <div className="mt-6 flow-root">
             <div className="inline-block min-w-full align-middle">
-                <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+                <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+                    {/* Mobile View */}
                     <div className="md:hidden">
                         {invoices?.map((invoice) => (
                             <div
                                 key={invoice.id}
-                                className="mb-2 w-full rounded-md bg-white p-4"
+                                className="w-full border-b border-gray-800 p-4 last:border-b-0"
                             >
-                                <div className="flex items-center justify-between border-b pb-4">
+                                <div className="flex items-center justify-between border-b border-gray-800 pb-4">
                                     <div>
-                                        <div className="mb-2 flex items-center">
+                                        <div className="mb-2 flex items-center gap-3">
                                             <Image
                                                 src={invoice.image_url}
-                                                className="mr-2 rounded-full"
-                                                width={28}
-                                                height={28}
+                                                className="rounded-full ring-2 ring-gray-700"
+                                                width={32}
+                                                height={32}
                                                 alt={`${invoice.name}'s profile picture`}
                                             />
-                                            <p>{invoice.name}</p>
+                                            <p className="text-sm font-medium text-white">
+                                                {invoice.name}
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-xs text-gray-500">
                                             {invoice.email}
                                         </p>
                                     </div>
@@ -43,10 +47,12 @@ export default async function InvoicesTable({
                                 </div>
                                 <div className="flex w-full items-center justify-between pt-4">
                                     <div>
-                                        <p className="text-xl font-medium">
+                                        <p className="text-lg font-bold text-white">
                                             {formatCurrency(invoice.amount)}
                                         </p>
-                                        <p>{formatDateToLocal(invoice.date)}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {formatDateToLocal(invoice.date)}
+                                        </p>
                                     </div>
                                     <div className="flex justify-end gap-2">
                                         <UpdateInvoice id={invoice.id} />
@@ -55,86 +61,95 @@ export default async function InvoicesTable({
                                 </div>
                             </div>
                         ))}
+
+                        {/* Empty state mobile */}
+                        {invoices?.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-12 px-4">
+                                <p className="text-gray-500 text-sm">Nenhuma fatura encontrada</p>
+                            </div>
+                        )}
                     </div>
-                    <table className="hidden min-w-full text-gray-900 md:table">
-                        <thead className="rounded-lg text-left text-sm font-normal">
+
+                    {/* Desktop View */}
+                    <table className="hidden min-w-full md:table">
+                        <thead className="bg-gray-800/50">
                             <tr>
                                 <th
                                     scope="col"
-                                    className="px-4 py-5 font-medium sm:pl-6"
+                                    className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                                 >
-                                    Customer
+                                    Cliente
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                                 >
                                     Email
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                                 >
-                                    Amount
+                                    Valor
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                                 >
-                                    Date
+                                    Data
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"
                                 >
                                     Status
                                 </th>
                                 <th
                                     scope="col"
-                                    className="relative py-3 pl-6 pr-3"
+                                    className="relative py-4 pl-3 pr-6"
                                 >
-                                    <span className="sr-only">Edit</span>
+                                    <span className="sr-only">Ações</span>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white">
+                        <tbody className="divide-y divide-gray-800">
                             {invoices?.map((invoice) => (
                                 <tr
                                     key={invoice.id}
-                                    className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
+                                    className="hover:bg-gray-800/50 transition-colors group"
                                 >
-                                    <td className="whitespace-nowrap py-3 pl-6 pr-3">
+                                    <td className="whitespace-nowrap py-4 pl-6 pr-3">
                                         <div className="flex items-center gap-3">
                                             <Image
                                                 src={invoice.image_url}
-                                                className="rounded-full"
+                                                className="rounded-full ring-2 ring-gray-700 group-hover:ring-gray-600 transition-all"
                                                 style={{
                                                     objectFit: "cover",
                                                     aspectRatio: "1 / 1",
                                                 }}
-                                                width={28}
-                                                height={28}
+                                                width={36}
+                                                height={36}
                                                 alt={`${invoice.name}'s profile picture`}
                                             />
-                                            <p>{invoice.name}</p>
+                                            <p className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
+                                                {invoice.name}
+                                            </p>
                                         </div>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-3">
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-400">
                                         {invoice.email}
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-3">
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-white">
                                         {formatCurrency(invoice.amount)}
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-3">
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-400">
                                         {formatDateToLocal(invoice.date)}
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-3">
-                                        <InvoiceStatus
-                                            status={invoice.status}
-                                        />
+                                    <td className="whitespace-nowrap px-3 py-4">
+                                        <InvoiceStatus status={invoice.status} />
                                     </td>
-                                    <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                                        <div className="flex justify-end gap-3">
+                                    <td className="whitespace-nowrap py-4 pl-3 pr-6">
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <UpdateInvoice id={invoice.id} />
                                             <DeleteInvoice id={invoice.id} />
                                         </div>
@@ -143,6 +158,19 @@ export default async function InvoicesTable({
                             ))}
                         </tbody>
                     </table>
+
+                    {/* Empty state desktop */}
+                    {invoices?.length === 0 && (
+                        <div className="hidden md:flex flex-col items-center justify-center py-12">
+                            <div className="p-3 bg-gray-800 rounded-full mb-4">
+                                <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <p className="text-gray-500 text-sm">Nenhuma fatura encontrada</p>
+                            <p className="text-gray-600 text-xs mt-1">Tente ajustar os filtros de busca</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

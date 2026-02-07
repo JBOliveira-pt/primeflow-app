@@ -1,3 +1,4 @@
+// app/ui/dashboard/sidenav.tsx
 "use client";
 
 import {
@@ -8,27 +9,39 @@ import {
   Home,
   Menu,
   X,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import AcmeLogo from "@/app/ui/acme-logo";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { DashboardHeader } from "@/app/components/Header";
+import { Button } from "@/app/components/button";
 
 export default function SideNav() {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Botão do menu mobile para passar ao header
+  const mobileMenuTrigger = (
+    <button
+      onClick={() => setIsOpen(!isOpen)}
+      className="p-2 bg-gray-900 text-white rounded-lg border border-gray-800 hover:bg-gray-800 transition-colors"
+      aria-label="Toggle menu"
+    >
+      {isOpen ? <X size={24} /> : <Menu size={24} />}
+    </button>
+  );
+
+  // Dados do usuário (você pode pegar da sessão)
+  const userData = {
+    nome: "João Silva",
+    role: "Admin",
+    foto: undefined, // ou URL da foto
+  };
+
   return (
     <>
-      {/* Botão Mobile - Visível apenas em telas pequenas */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-950 text-white rounded-lg border border-gray-800 hover:bg-gray-900 transition-colors"
-        aria-label="Toggle menu"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
       {/* Overlay - Visível apenas no mobile quando o menu está aberto */}
       {isOpen && (
         <div
@@ -37,71 +50,76 @@ export default function SideNav() {
         />
       )}
 
+      {/* Header */}
+      <DashboardHeader 
+        mobileMenuTrigger={mobileMenuTrigger}
+       
+        user={userData}
+      />
+
       {/* Sidebar */}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
-          w-64 lg:w-70 
-          bg-gray-950 text-white 
-          flex flex-col 
-          border-r border-gray-800 
-          h-full
-          transform transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 z-40
+          w-64 bg-gray-950 text-white p-6 flex flex-col border-r border-gray-800 h-screen
+          transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10 mt-16 lg:mt-8 px-6">
-          <div className="w-10 h-10 flex items-center justify-center">
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <div className="w-15 h-10 flex items-center justify-center">
             <AcmeLogo />
           </div>
-          <div className="text-xl font-bold">
-            <p>PrimeFLOW</p>
+          <div>
+            <h1 className="text-xl font-bold">
+              PrimeFLOW
+            </h1>
+            <p className="text-xs text-gray-500">Dashboard</p>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex flex-col h-full gap-2 px-3">
+        {/* Menu de Navegação */}
+        <nav className="flex-1 space-y-2">
           <NavItem
             icon={<Home size={20} />}
             label="Home"
             href="/dashboard"
             onClick={() => setIsOpen(false)}
           />
-
           <NavItem
             href="/dashboard/invoices"
             icon={<User size={20} />}
             label="Invoices"
             onClick={() => setIsOpen(false)}
           />
-
           <NavItem
             href="/dashboard/customers"
-            icon={<History size={20} />}
+            icon={<Users size={20} />}
             label="Customers"
             onClick={() => setIsOpen(false)}
           />
-
           <NavItem
             href="/dashboard/users"
-            icon={<Users size={20} />}
+            icon={<History size={20} />}
             label="Users"
             onClick={() => setIsOpen(false)}
           />
         </nav>
 
         {/* Sign Out Button */}
-        <button
-          onClick={() => {
-            setIsOpen(false);
-            signOut({ callbackUrl: "/login" });
-          }}
-          className="flex items-center gap-3 text-red-400 hover:text-red-300 transition w-full p-3 mx-3 rounded-xl hover:bg-red-500/10 mt-auto mb-4"
-        >
-          <LogOut size={20} />
-          <span>Sign Out</span>
-        </button>
+        <div className="pt-6 border-t border-gray-900">
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              signOut({ callbackUrl: "/login" });
+            }}
+            className="flex items-center gap-3 text-red-400 hover:text-red-300 transition w-full p-3 rounded-lg hover:bg-red-500/10 group"
+          >
+            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Sair da conta</span>
+          </button>
+        </div>
       </aside>
     </>
   );

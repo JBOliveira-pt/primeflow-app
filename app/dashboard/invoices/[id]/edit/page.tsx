@@ -1,10 +1,11 @@
-import Form from "@/app/ui/invoices/edit-form";
-import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchInvoiceById, fetchCustomers } from "@/app/lib/data";
-import { notFound } from "next/navigation";
+// app/dashboard/invoices/[id]/edit/page.tsx
+import Form from '@/app/ui/invoices/edit-form';
+import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
+import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
+import { notFound } from 'next/navigation';
+import { FileText } from 'lucide-react';
 
-export default async function Page(props: { params: Promise<{ id: string }> }) {
-    const params = await props.params;
+export default async function Page({ params }: { params: { id: string } }) {
     const id = params.id;
     const [invoice, customers] = await Promise.all([
         fetchInvoiceById(id),
@@ -16,12 +17,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     }
 
     return (
-        <main>
+        <main className='p-5'>
             <Breadcrumbs
                 breadcrumbs={[
-                    { label: "Invoices", href: "/dashboard/invoices" },
+                    { label: 'Faturas', href: '/dashboard/invoices' },
                     {
-                        label: "Edit Invoice",
+                        label: 'Editar Fatura',
                         href: `/dashboard/invoices/${id}/edit`,
                         active: true,
                     },

@@ -102,13 +102,14 @@ export type LatestInvoice = {
     name: string;
     image_url: string;
     email: string;
-    date: string;
     amount: string;
+    date: string;
+    status: 'pending' | 'paid';
 };
 
-// The database returns a number for amount, but we later format it to a string with the formatCurrency function
-export type LatestInvoiceRaw = Omit<LatestInvoice, "amount"> & {
+export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount' | 'date'> & {
     amount: number;
+    date: string;
 };
 
 // ========================================

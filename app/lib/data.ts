@@ -13,6 +13,26 @@ import {
 import { formatCurrency, formatDateToLocal } from "./utils";
 import { auth } from "@/auth";
 
+export async function fetchUsers() {
+    try {
+        const data = await sql<User[]>`
+            SELECT 
+                id,
+                name,
+                email,
+                image_url,
+                role
+            FROM users
+            ORDER BY name ASC
+        `;
+
+        return data
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch users.');
+    }
+}
+
 // Helper para pegar organization_id da sessão
 async function getOrganizationId(): Promise<string> {
     const session = await auth();
@@ -55,11 +75,13 @@ export async function fetchLatestInvoices() {
             (Omit<LatestInvoiceRaw, "image_url"> & {
                 customer_id: string;
                 image_url: string | null;
+                status: 'pending' | 'paid';
             })[]
         >`
             SELECT 
                 invoices.amount, 
-                invoices.date, 
+                invoices.date,
+                invoices.status,
                 customers.name, 
                 customers.id as customer_id, 
                 customers.email, 
