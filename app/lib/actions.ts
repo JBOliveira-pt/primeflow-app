@@ -48,13 +48,13 @@ const CreateInvoice = FormSchema.omit({ id: true });
 const UpdateInvoice = FormSchema.omit({ id: true });
 
 export type State = {
-    errors?: {
+    errors: {
         customerId?: string[];
         amount?: string[];
         status?: string[];
         date?: string[];
     };
-    message?: string | null;
+    message: string | null;
 };
 
 const CustomerFormSchema = z.object({
@@ -73,12 +73,13 @@ const CreateCustomer = CustomerFormSchema;
 const UpdateCustomer = CustomerFormSchema;
 
 export type CustomerState = {
-    errors?: {
+    errors: {
         firstName?: string[];
         lastName?: string[];
         email?: string[];
+        imageFile?: string[];
     };
-    message?: string | null;
+    message: string | null;
 };
 
 // Maximum photo size: 5MB
@@ -153,8 +154,7 @@ export async function authenticate(
     }
 }
 
-export async function createInvoice(prevState: State, formData: FormData) {
-    // Validate form using Zod
+export async function createInvoice(prevState: State, formData: FormData): Promise<State> {
     const validatedFields = CreateInvoice.safeParse({
         customerId: formData.get("customerId"),
         amount: formData.get("amount"),
@@ -162,7 +162,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
         date: formData.get("date"),
     });
 
-    // If form validation fails, return errors early. Otherwise, continue.
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
@@ -170,24 +169,23 @@ export async function createInvoice(prevState: State, formData: FormData) {
         };
     }
 
-    // Prepare data for insertion into the database
     const { customerId, amount, status, date } = validatedFields.data;
     const amountInCents = amount * 100;
     const formattedDate = date.toISOString().split("T")[0];
 
-    // Insert data into the database
     try {
         await sql`
-    INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate})
-  `;
+            INSERT INTO invoices (customer_id, amount, status, date)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate})
+        `;
     } catch (error) {
         console.error(error);
         return {
+            errors: {},
             message: "Database Error: Failed to Create Invoice.",
         };
     }
-    // Revalidate the cache for the invoices page and redirect the user.
+    
     revalidatePath("/dashboard/invoices");
     redirect("/dashboard/invoices");
 }
@@ -196,12 +194,12 @@ export async function updateInvoice(
     id: string,
     prevState: State,
     formData: FormData,
-) {
-    // Check admin permission
+): Promise<State> {  // ⬅️ Adicione tipo de retorno
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
+            errors: {},  // ⬅️ ADICIONE ESTA LINHA
             message: "Unauthorized: Only admins can update invoices.",
         };
     }
@@ -226,12 +224,15 @@ export async function updateInvoice(
 
     try {
         await sql`
-      UPDATE invoices
+            UPDATE invoices
             SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}, date = ${formattedDate}
-      WHERE id = ${id}
-    `;
+            WHERE id = ${id}
+        `;
     } catch (error) {
-        return { message: "Database Error: Failed to Update Invoice." };
+        return { 
+            errors: {},  // ⬅️ ADICIONE ESTA LINHA
+            message: "Database Error: Failed to Update Invoice." 
+        };
     }
 
     revalidatePath("/dashboard/invoices");
@@ -258,19 +259,23 @@ export async function deleteInvoice(id: string) {
 export async function createCustomer(
     prevState: CustomerState,
     formData: FormData,
-) {
+): Promise<CustomerState> {
     const session = await auth();
     const organizationId = (session?.user as any)?.organizationId;
 
     if (!organizationId) {
-        return { message: "No organization found" };
+        return { 
+            errors: {},
+            message: "No organization found"
+        };
     }
 
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
-            message: "Unauthorized: Only admins can create customers.",
+            errors: {},
+            message: "Unauthorized: Only admins can create customers."
         };
     }
 
@@ -283,14 +288,15 @@ export async function createCustomer(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to create customer.",
+            message: "Missing or invalid fields. Failed to create customer."
         };
     }
 
     const imageFile = formData.get("imageFile");
     if (!(imageFile instanceof File) || imageFile.size === 0) {
         return {
-            message: "Please upload a customer photo.",
+            errors: {},
+            message: "Please upload a customer photo."
         };
     }
 
@@ -300,25 +306,26 @@ export async function createCustomer(
     let customerId: string;
     try {
         const result = await sql`
-      INSERT INTO customers (id, name, email, organization_id)
+            INSERT INTO customers (id, name, email, organization_id)
             VALUES (gen_random_uuid(), ${fullName}, ${email}, ${organizationId})
             RETURNING id
-    `;
+        `;
         customerId = result[0].id;
     } catch (error) {
         console.error(error);
         return {
-            message: "Database Error: Failed to create customer.",
+            errors: {},
+            message: "Database Error: Failed to create customer."
         };
     }
 
-    // Save photo after customer is created
     try {
         await saveCustomerPhoto(imageFile, customerId);
     } catch (error) {
         console.error(error);
         return {
-            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
+            errors: {},
+            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
         };
     }
 
@@ -332,12 +339,13 @@ export async function updateCustomer(
     id: string,
     prevState: CustomerState,
     formData: FormData,
-) {
+): Promise<CustomerState> {
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
-            message: "Unauthorized: Only admins can update customers.",
+            errors: {},
+            message: "Unauthorized: Only admins can update customers."
         };
     }
 
@@ -350,14 +358,15 @@ export async function updateCustomer(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to update customer.",
+            message: "Missing or invalid fields. Failed to update customer."
         };
     }
 
     const imageFile = formData.get("imageFile");
     if (!(imageFile instanceof File) || imageFile.size === 0) {
         return {
-            message: "Please upload a new customer photo.",
+            errors: {}, 
+            message: "Please upload a new customer photo."
         };
     }
 
@@ -366,22 +375,25 @@ export async function updateCustomer(
 
     try {
         await sql`
-      UPDATE customers
-      SET name = ${fullName}, email = ${email}
-      WHERE id = ${id}
-    `;
+            UPDATE customers
+            SET name = ${fullName}, email = ${email}
+            WHERE id = ${id}
+        `;
     } catch (error) {
         console.error(error);
-        return { message: "Database Error: Failed to update customer." };
+        return { 
+            errors: {},
+            message: "Database Error: Failed to update customer." 
+        };
     }
 
-    // Save photo after customer is updated
     try {
         await saveCustomerPhoto(imageFile, id);
     } catch (error) {
         console.error(error);
         return {
-            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
+            errors: {},
+            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
         };
     }
 
@@ -441,22 +453,27 @@ const CreateUser = UserFormSchema.extend({
 const UpdateUser = UserFormSchema;
 
 export type UserState = {
-    errors?: {
+    errors: {
         firstName?: string[];
         lastName?: string[];
         email?: string[];
         password?: string[];
         role?: string[];
+        imageFile?: string[];
     };
-    message?: string | null;
+    message: string | null;
 };
 
-export async function createUser(prevState: UserState, formData: FormData) {
+export async function createUser(
+    prevState: UserState, 
+    formData: FormData
+): Promise<UserState> {
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
-            message: "Unauthorized: Only admins can create users.",
+            errors: {},
+            message: "Unauthorized: Only admins can create users."
         };
     }
 
@@ -471,7 +488,7 @@ export async function createUser(prevState: UserState, formData: FormData) {
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to create user.",
+            message: "Missing or invalid fields. Failed to create user."
         };
     }
 
@@ -479,8 +496,6 @@ export async function createUser(prevState: UserState, formData: FormData) {
     const { firstName, lastName, email, password, role } = validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
-    // Hash the password
-    const bcrypt = require("bcrypt");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     let userId: string;
@@ -494,18 +509,19 @@ export async function createUser(prevState: UserState, formData: FormData) {
     } catch (error) {
         console.error(error);
         return {
-            message: "Database Error: Failed to create user.",
+            errors: {},
+            message: "Database Error: Failed to create user."
         };
     }
 
-    // Save photo if provided
     if (imageFile instanceof File && imageFile.size > 0) {
         try {
             await saveUserPhoto(imageFile, userId);
         } catch (error) {
             console.error(error);
             return {
-                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
+                errors: {},
+                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
             };
         }
     }
@@ -518,12 +534,13 @@ export async function updateUser(
     id: string,
     prevState: UserState,
     formData: FormData,
-) {
+): Promise<UserState> {
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
-            message: "Unauthorized: Only admins can update users.",
+            errors: {},
+            message: "Unauthorized: Only admins can update users."
         };
     }
 
@@ -538,7 +555,7 @@ export async function updateUser(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to update user.",
+            message: "Missing or invalid fields. Failed to update user."
         };
     }
 
@@ -546,9 +563,7 @@ export async function updateUser(
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
-        // Update user, conditionally updating password if provided
         if (password && password.length >= 6) {
-            const bcrypt = require("bcrypt");
             const hashedPassword = await bcrypt.hash(password, 10);
             await sql`
                 UPDATE users
@@ -564,10 +579,12 @@ export async function updateUser(
         }
     } catch (error) {
         console.error(error);
-        return { message: "Database Error: Failed to update user." };
+        return { 
+            errors: {},
+            message: "Database Error: Failed to update user." 
+        };
     }
 
-    // Save photo if provided
     const imageFile = formData.get("imageFile");
     if (imageFile instanceof File && imageFile.size > 0) {
         try {
@@ -575,7 +592,8 @@ export async function updateUser(
         } catch (error) {
             console.error(error);
             return {
-                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
+                errors: {},
+                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
             };
         }
     }
