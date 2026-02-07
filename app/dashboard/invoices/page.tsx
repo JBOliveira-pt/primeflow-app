@@ -42,12 +42,12 @@ export default async function Page(props: {
     const totalPages = await fetchInvoicesPages(query);
 
     return (
-        <div className="w-full p-6">
+        <div className="w-full p-6 bg-gray-950">
             <div className="flex flex-col w-full justify-between">
                 <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-white">
                     Faturas
                 </h1>
-                <p className="text-sm text-gray-400">Gerencie suas faturas</p>
+                <p className="text-sm text-gray-400 text-center lg:text-start">Gerencie suas faturas</p>
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">

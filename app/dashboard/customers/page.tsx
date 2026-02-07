@@ -54,12 +54,12 @@ export default async function Page(props: {
     );
 
     return (
-        <div className="w-full p-6">
+        <div className="w-full p-6 bg-gray-950">
             <div className="flex flex-col w-full justify-between">
                 <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-white">
                     Clientes
                 </h1>
-                <p className="text-sm text-gray-400">Gerencie seus clientes</p>
+                <p className="text-sm text-gray-400 text-center lg:text-start">Gerencie seus clientes</p>
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
