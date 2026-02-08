@@ -3,6 +3,7 @@ import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { deleteCustomer } from "@/app/lib/actions";
+import { DeleteCustomerButton } from "./delete-customer-button";
 
 export async function AddCustomerButton() {
     const session = await auth();
@@ -50,23 +51,5 @@ export async function DeleteCustomer({ id }: { id: string }) {
         return null;
     }
 
-    const deleteCustomerWithId = deleteCustomer.bind(null, id);
-
-    return (
-        <form action={deleteCustomerWithId}>
-            <button
-                type="submit"
-                className="rounded-lg border border-gray-700 p-2 hover:bg-red-500/10 hover:border-red-500/50 transition-all group"
-                title="Deletar cliente"
-                onClick={(e) => {
-                    if (!confirm('Tem certeza que deseja deletar este cliente?')) {
-                        e.preventDefault();
-                    }
-                }}
-            >
-                <span className="sr-only">Delete</span>
-                <TrashIcon className="w-5 h-5 text-gray-400 group-hover:text-red-400 transition-colors" />
-            </button>
-        </form>
-    );
+    return <DeleteCustomerButton id={id} deleteAction={deleteCustomer} />;
 }

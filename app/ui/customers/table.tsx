@@ -1,7 +1,7 @@
 // app/ui/customers/table.tsx
 import Image from "next/image";
 import { FormattedCustomersTable } from "@/app/lib/definitions";
-import { UpdateCustomer, DeleteCustomer } from "@/app/ui/customers/buttons";
+import { UpdateCustomer, DeleteCustomer } from "./buttons";
 import { auth } from "@/auth";
 import { Users } from "lucide-react";
 
@@ -78,8 +78,12 @@ export default async function CustomersTable({
                                         {/* Actions */}
                                         {isAdmin && (
                                             <div className="pt-4 flex justify-end gap-2">
-                                                <UpdateCustomer id={customer.id} />
-                                                <DeleteCustomer id={customer.id} />
+                                                <UpdateCustomer
+                                                    id={customer.id}
+                                                />
+                                                <DeleteCustomer
+                                                    id={customer.id}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -91,7 +95,9 @@ export default async function CustomersTable({
                                         <div className="p-3 bg-gray-800 rounded-full mb-3">
                                             <Users className="w-6 h-6 text-gray-500" />
                                         </div>
-                                        <p className="text-gray-500 text-sm">Nenhum cliente encontrado</p>
+                                        <p className="text-gray-500 text-sm">
+                                            Nenhum cliente encontrado
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -135,7 +141,9 @@ export default async function CustomersTable({
                                                 scope="col"
                                                 className="relative py-4 pl-3 pr-6"
                                             >
-                                                <span className="sr-only">Ações</span>
+                                                <span className="sr-only">
+                                                    Ações
+                                                </span>
                                             </th>
                                         )}
                                     </tr>
@@ -143,8 +151,8 @@ export default async function CustomersTable({
 
                                 <tbody className="divide-y divide-gray-800">
                                     {customers.map((customer) => (
-                                        <tr 
-                                            key={customer.id} 
+                                        <tr
+                                            key={customer.id}
                                             className="hover:bg-gray-800/50 transition-colors group"
                                         >
                                             <td className="whitespace-nowrap py-4 pl-6 pr-3">
@@ -154,7 +162,8 @@ export default async function CustomersTable({
                                                         className="rounded-full ring-2 ring-gray-700 group-hover:ring-gray-600 transition-all"
                                                         style={{
                                                             objectFit: "cover",
-                                                            aspectRatio: "1 / 1",
+                                                            aspectRatio:
+                                                                "1 / 1",
                                                         }}
                                                         alt={`${customer.name}'s profile picture`}
                                                         width={36}
@@ -186,8 +195,12 @@ export default async function CustomersTable({
                                             {isAdmin && (
                                                 <td className="whitespace-nowrap py-4 pl-3 pr-6">
                                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <UpdateCustomer id={customer.id} />
-                                                        <DeleteCustomer id={customer.id} />
+                                                        <UpdateCustomer
+                                                            id={customer.id}
+                                                        />
+                                                        <DeleteCustomer
+                                                            id={customer.id}
+                                                        />
                                                     </div>
                                                 </td>
                                             )}
@@ -202,8 +215,12 @@ export default async function CustomersTable({
                                     <div className="p-3 bg-gray-800 rounded-full mb-4">
                                         <Users className="w-6 h-6 text-gray-500" />
                                     </div>
-                                    <p className="text-gray-500 text-sm">Nenhum cliente encontrado</p>
-                                    <p className="text-gray-600 text-xs mt-1">Tente ajustar os filtros de busca</p>
+                                    <p className="text-gray-500 text-sm">
+                                        Nenhum cliente encontrado
+                                    </p>
+                                    <p className="text-gray-600 text-xs mt-1">
+                                        Tente ajustar os filtros de busca
+                                    </p>
                                 </div>
                             )}
                         </div>

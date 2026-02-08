@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import {
-   Customer,
+    Customer,
     CustomerField,
     CustomersTableType,
     FormattedCustomersTable,
@@ -8,7 +8,7 @@ import {
     InvoicesTable,
     LatestInvoiceRaw,
     Revenue,
-    User, 
+    User,
 } from "./definitions";
 import { formatCurrency, formatDateToLocal } from "./utils";
 import { auth } from "@/auth";
@@ -26,10 +26,10 @@ export async function fetchUsers() {
             ORDER BY name ASC
         `;
 
-        return data
+        return data;
     } catch (error) {
-        console.error('Database Error:', error);
-        throw new Error('Failed to fetch users.');
+        console.error("Database Error:", error);
+        throw new Error("Failed to fetch users.");
     }
 }
 
@@ -75,7 +75,7 @@ export async function fetchLatestInvoices() {
             (Omit<LatestInvoiceRaw, "image_url"> & {
                 customer_id: string;
                 image_url: string | null;
-                status: 'pending' | 'paid';
+                status: "pending" | "paid";
             })[]
         >`
             SELECT 
@@ -252,7 +252,9 @@ export async function fetchCustomers() {
     }
 }
 
-export async function fetchFilteredCustomers(query: string): Promise<FormattedCustomersTable[]> {
+export async function fetchFilteredCustomers(
+    query: string,
+): Promise<FormattedCustomersTable[]> {
     const organizationId = await getOrganizationId();
 
     try {
@@ -274,17 +276,19 @@ export async function fetchFilteredCustomers(query: string): Promise<FormattedCu
             GROUP BY customers.id, customers.name, customers.email, customers.image_url
             ORDER BY customers.name ASC
         `;
-         const formattedCustomers: FormattedCustomersTable[] = data.map((customer) => ({
-            id: customer.id,
-            name: customer.name,
-            email: customer.email,
-            image_url: customer.image_url || DEFAULT_AVATAR,
-            total_invoices: Number(customer.total_invoices),
-            total_pending: formatCurrency(customer.total_pending),
-            total_paid: formatCurrency(customer.total_paid),
-        }));
+        const formattedCustomers: FormattedCustomersTable[] = data.map(
+            (customer) => ({
+                id: customer.id,
+                name: customer.name,
+                email: customer.email,
+                image_url: customer.image_url || DEFAULT_AVATAR,
+                total_invoices: Number(customer.total_invoices),
+                total_pending: formatCurrency(customer.total_pending),
+                total_paid: formatCurrency(customer.total_paid),
+            }),
+        );
 
-        return formattedCustomers;  
+        return formattedCustomers;
     } catch (err) {
         console.error("Database Error:", err);
         throw new Error("Failed to fetch customer table.");
