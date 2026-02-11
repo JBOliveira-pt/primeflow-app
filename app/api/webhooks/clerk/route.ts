@@ -63,68 +63,42 @@ export async function POST(req: Request) {
                 return new Response("No email provided", { status: 400 });
             }
 
-            // Check if user already exists
+            // Check if user already exists (created by admin via dashboard)
             const existingUser = await sql`
-        SELECT id FROM users WHERE email = ${email}
+        SELECT id, organization_id FROM users WHERE email = ${email}
       `;
 
             if (existingUser.length > 0) {
-                // User exists, update clerk_id
+                // User was created by admin via dashboard, just update clerk_id
                 await sql`
           UPDATE users 
-          SET clerk_user_id = ${id}
+          SET clerk_user_id = ${id}, image_url = ${image_url || null}
           WHERE email = ${email}
         `;
                 console.log(`Updated existing user with Clerk ID: ${id}`);
             } else {
-                // Check if this is the first user (will be admin)
-                const existingUsers = await sql`
-          SELECT id FROM users WHERE role = 'admin' LIMIT 1
+                // New signup via Clerk - ALWAYS create new organization
+                const orgName = name
+                    ? `${name}'s Organization`
+                    : "My Organization";
+                const orgSlug = `${orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+
+                const newOrg = await sql`
+          INSERT INTO organizations (id, name, slug, owner_id, created_at, updated_at)
+          VALUES (
+            gen_random_uuid(),
+            ${orgName},
+            ${orgSlug},
+            ${id},
+            NOW(),
+            NOW()
+          )
+          RETURNING id
         `;
+                const organizationId = newOrg[0].id;
+                console.log(`Created new organization: ${orgName} (${organizationId})`);
 
-                const isFirstUser = existingUsers.length === 0;
-                const role = isFirstUser ? "admin" : "user";
-                let organizationId: string;
-
-                if (isFirstUser) {
-                    // Create new organization for first admin
-                    const orgName = name
-                        ? `${name}'s Organization`
-                        : "My Organization";
-                    const orgSlug = orgName
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "-");
-
-                    const newOrg = await sql`
-            INSERT INTO organizations (id, name, slug, owner_id, created_at, updated_at)
-            VALUES (
-              gen_random_uuid(),
-              ${orgName},
-              ${orgSlug},
-              ${id},
-              NOW(),
-              NOW()
-            )
-            RETURNING id
-          `;
-                    organizationId = newOrg[0].id;
-                    console.log(`Created new organization: ${orgName}`);
-                } else {
-                    // Get the first organization (assuming single-org for now)
-                    const org = await sql`
-            SELECT id FROM organizations ORDER BY created_at ASC LIMIT 1
-          `;
-
-                    if (org.length === 0) {
-                        return new Response("No organization found", {
-                            status: 500,
-                        });
-                    }
-
-                    organizationId = org[0].id;
-                }
-
-                // Create new user
+                // Create new user as admin of their own organization
                 await sql`
           INSERT INTO users (id, name, email, clerk_user_id, role, organization_id, image_url, password)
           VALUES (
@@ -132,14 +106,14 @@ export async function POST(req: Request) {
             ${name},
             ${email},
             ${id},
-            ${role},
+            'admin',
             ${organizationId},
             ${image_url || null},
             'clerk-auth'
           )
         `;
 
-                console.log(`Created new user with role: ${role}`);
+                console.log(`Created new admin user: ${email} in organization ${organizationId}`);
             }
 
             return new Response("User synced", { status: 200 });
