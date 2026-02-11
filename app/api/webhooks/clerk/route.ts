@@ -57,7 +57,8 @@ export async function POST(req: Request) {
 
     try {
         if (eventType === "user.created") {
-            // New user signed up
+            // New user signed up - just create user record with NULL organization_id
+            // Organization will be created in /api/onboarding page
             const email = email_addresses[0]?.email_address;
             const name = `${first_name || ""} ${last_name || ""}`.trim() || "User";
 
@@ -81,33 +82,11 @@ export async function POST(req: Request) {
           SET clerk_user_id = ${id}, image_url = ${image_url || null}
           WHERE email = ${email}
         `;
-                console.log(`[WEBHOOK] Updated existing user with Clerk ID: ${id}`);
+                console.log(`[WEBHOOK] ✅ Updated existing user with Clerk ID: ${id}`);
             } else {
-                console.log(`[WEBHOOK] Creating NEW user and organization for: ${email}`);
-                // New signup via Clerk - ALWAYS create new organization
-                const orgName = name
-                    ? `${name}'s Organization`
-                    : "My Organization";
-                const orgSlug = `${orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
-
-                const newOrg = await sql`
-          INSERT INTO organizations (id, name, slug, owner_id, created_at, updated_at)
-          VALUES (
-            gen_random_uuid(),
-            ${orgName},
-            ${orgSlug},
-            ${id},
-            NOW(),
-            NOW()
-          )
-          RETURNING id
-        `;
-                const organizationId = newOrg[0].id;
-                console.log(
-                    `[WEBHOOK] ✅ Created organization: ${orgName} (${organizationId})`,
-                );
-
-                // Create new user as admin of their own organization
+                console.log(`[WEBHOOK] Creating new user for: ${email}`);
+                // New signup via Clerk - create user with NULL organization_id
+                // User will complete organization setup in /onboarding
                 await sql`
           INSERT INTO users (id, name, email, clerk_user_id, role, organization_id, image_url, password)
           VALUES (
@@ -115,15 +94,15 @@ export async function POST(req: Request) {
             ${name},
             ${email},
             ${id},
-            'admin',
-            ${organizationId},
+            'user',
+            NULL,
             ${image_url || null},
             'clerk-auth'
           )
         `;
 
                 console.log(
-                    `[WEBHOOK] ✅ Created admin user: ${email} in org ${organizationId}`,
+                    `[WEBHOOK] ✅ Created user: ${email} → redirects to /onboarding to create organization`,
                 );
             }
 
