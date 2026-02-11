@@ -1,8 +1,8 @@
 "use server";
 
 import { uploadImageToR2, deleteImageFromR2 } from "./r2-storage";
-import { signIn, auth } from "@/auth";
-import { AuthError } from "next-auth";
+import { auth } from "@clerk/nextjs/server";
+import { canEditResource } from "./auth-helpers";
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -12,17 +12,27 @@ import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import type { Customer, Invoice } from "./definitions";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 // Helper function to check admin permissions
 async function checkAdminPermission() {
-    const session = await auth();
-    if (!session?.user) {
+    const { userId } = await auth();
+    if (!userId) {
         throw new Error("Unauthorized: No session");
     }
-    const userRole = (session.user as any).role;
-    if (userRole !== "admin") {
+
+    // Query database to check user role using Clerk ID
+    const user = await sql`
+        SELECT role FROM users WHERE clerk_user_id = ${userId}
+    `;
+
+    if (user.length === 0) {
+        throw new Error("User not found in database");
+    }
+
+    if (user[0].role !== "admin") {
         throw new Error("Unauthorized: Admin access required");
     }
 }
@@ -135,26 +145,53 @@ async function saveUserPhoto(
     return persistPhotoToR2(file, "user", userId);
 }
 
+// Authentication is now handled by Clerk
+// Remove calls to this function and use Clerk's <SignInButton> instead
 export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
 ) {
-    try {
-        await signIn("credentials", formData);
-    } catch (error) {
-        if (error instanceof AuthError) {
-            switch (error.type) {
-                case "CredentialsSignin":
-                    return "Invalid credentials.";
-                default:
-                    return "Something went wrong.";
-            }
-        }
-        throw error;
-    }
+    // This function is deprecated with Clerk integration
+    throw new Error(
+        "Use Clerk's SignInButton instead of server-side authentication",
+    );
 }
 
-export async function createInvoice(prevState: State, formData: FormData): Promise<State> {
+export async function createInvoice(
+    prevState: State,
+    formData: FormData,
+): Promise<State> {
+    const { userId } = await auth();
+
+    if (!userId) {
+        return {
+            errors: {},
+            message: "Unauthorized",
+        };
+    }
+
+    // Get user's database ID from clerk_user_id
+    let creatorId: string | undefined;
+    try {
+        const user = await sql<
+            { id: string }[]
+        >`SELECT id FROM users WHERE clerk_user_id = ${userId}`;
+        creatorId = user[0]?.id;
+    } catch (error) {
+        console.error("Failed to fetch user:", error);
+        return {
+            errors: {},
+            message: "Failed to fetch user information.",
+        };
+    }
+
+    if (!creatorId) {
+        return {
+            errors: {},
+            message: "User not found in database.",
+        };
+    }
+
     const validatedFields = CreateInvoice.safeParse({
         customerId: formData.get("customerId"),
         amount: formData.get("amount"),
@@ -175,8 +212,8 @@ export async function createInvoice(prevState: State, formData: FormData): Promi
 
     try {
         await sql`
-            INSERT INTO invoices (customer_id, amount, status, date)
-            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate})
+            INSERT INTO invoices (customer_id, amount, status, date, created_by)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate}, ${creatorId})
         `;
     } catch (error) {
         console.error(error);
@@ -185,7 +222,7 @@ export async function createInvoice(prevState: State, formData: FormData): Promi
             message: "Database Error: Failed to Create Invoice.",
         };
     }
-    
+
     revalidatePath("/dashboard/invoices");
     redirect("/dashboard/invoices");
 }
@@ -194,13 +231,34 @@ export async function updateInvoice(
     id: string,
     prevState: State,
     formData: FormData,
-): Promise<State> {  // ⬅️ Adicione tipo de retorno
+): Promise<State> {
+    // Fetch invoice to check permissions
+    let invoice: (Invoice & { created_by?: string }) | undefined;
     try {
-        await checkAdminPermission();
+        const data = await sql<
+            (Invoice & { created_by?: string })[]
+        >`SELECT * FROM invoices WHERE id = ${id}`;
+        invoice = data[0];
     } catch (error) {
         return {
-            errors: {},  // ⬅️ ADICIONE ESTA LINHA
-            message: "Unauthorized: Only admins can update invoices.",
+            errors: {},
+            message: "Invoice not found.",
+        };
+    }
+
+    if (!invoice) {
+        return {
+            errors: {},
+            message: "Invoice not found.",
+        };
+    }
+
+    // Check if user can edit this invoice
+    const canEdit = await canEditResource(invoice.created_by);
+    if (!canEdit) {
+        return {
+            errors: {},
+            message: "Unauthorized: You can only edit invoices you created.",
         };
     }
 
@@ -229,9 +287,9 @@ export async function updateInvoice(
             WHERE id = ${id}
         `;
     } catch (error) {
-        return { 
-            errors: {},  // ⬅️ ADICIONE ESTA LINHA
-            message: "Database Error: Failed to Update Invoice." 
+        return {
+            errors: {}, // ⬅️ ADICIONE ESTA LINHA
+            message: "Database Error: Failed to Update Invoice.",
         };
     }
 
@@ -240,11 +298,27 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-    // Check admin permission
+    // Fetch invoice to check permissions
+    let invoice: (Invoice & { created_by?: string }) | undefined;
     try {
-        await checkAdminPermission();
+        const data = await sql<
+            (Invoice & { created_by?: string })[]
+        >`SELECT * FROM invoices WHERE id = ${id}`;
+        invoice = data[0];
     } catch (error) {
-        throw new Error("Unauthorized: Only admins can delete invoices.");
+        throw new Error("Invoice not found.");
+    }
+
+    if (!invoice) {
+        throw new Error("Invoice not found.");
+    }
+
+    // Check if user can delete this invoice
+    const canDelete = await canEditResource(invoice.created_by);
+    if (!canDelete) {
+        throw new Error(
+            "Unauthorized: You can only delete invoices you created.",
+        );
     }
 
     try {
@@ -260,22 +334,43 @@ export async function createCustomer(
     prevState: CustomerState,
     formData: FormData,
 ): Promise<CustomerState> {
-    const session = await auth();
-    const organizationId = (session?.user as any)?.organizationId;
+    const { userId } = await auth();
 
-    if (!organizationId) {
-        return { 
+    if (!userId) {
+        return {
             errors: {},
-            message: "No organization found"
+            message: "Unauthorized",
         };
     }
 
+    // Fetch organization_id from database using userId
+    let organizationId: string | undefined;
+    let creatorId: string | undefined;
     try {
-        await checkAdminPermission();
+        const user = await sql<
+            { organization_id: string; id: string }[]
+        >`SELECT organization_id, id FROM users WHERE clerk_user_id = ${userId}`;
+        organizationId = user[0]?.organization_id;
+        creatorId = user[0]?.id;
     } catch (error) {
+        console.error("Failed to fetch user organization:", error);
         return {
             errors: {},
-            message: "Unauthorized: Only admins can create customers."
+            message: "Failed to retrieve user organization.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "User not found or no organization assigned.",
+        };
+    }
+
+    if (!creatorId) {
+        return {
+            errors: {},
+            message: "User not found in database.",
         };
     }
 
@@ -288,7 +383,7 @@ export async function createCustomer(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to create customer."
+            message: "Missing or invalid fields. Failed to create customer.",
         };
     }
 
@@ -296,7 +391,7 @@ export async function createCustomer(
     if (!(imageFile instanceof File) || imageFile.size === 0) {
         return {
             errors: {},
-            message: "Please upload a customer photo."
+            message: "Please upload a customer photo.",
         };
     }
 
@@ -306,8 +401,8 @@ export async function createCustomer(
     let customerId: string;
     try {
         const result = await sql`
-            INSERT INTO customers (id, name, email, organization_id)
-            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${organizationId})
+            INSERT INTO customers (id, name, email, organization_id, created_by)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${organizationId}, ${creatorId})
             RETURNING id
         `;
         customerId = result[0].id;
@@ -315,7 +410,7 @@ export async function createCustomer(
         console.error(error);
         return {
             errors: {},
-            message: "Database Error: Failed to create customer."
+            message: "Database Error: Failed to create customer.",
         };
     }
 
@@ -325,7 +420,7 @@ export async function createCustomer(
         console.error(error);
         return {
             errors: {},
-            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
+            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
         };
     }
 
@@ -340,12 +435,33 @@ export async function updateCustomer(
     prevState: CustomerState,
     formData: FormData,
 ): Promise<CustomerState> {
+    // Fetch customer to check permissions
+    let customer: Customer | undefined;
     try {
-        await checkAdminPermission();
+        const data = await sql<
+            Customer[]
+        >`SELECT * FROM customers WHERE id = ${id}`;
+        customer = data[0];
     } catch (error) {
         return {
             errors: {},
-            message: "Unauthorized: Only admins can update customers."
+            message: "Customer not found.",
+        };
+    }
+
+    if (!customer) {
+        return {
+            errors: {},
+            message: "Customer not found.",
+        };
+    }
+
+    // Check if user can edit this customer
+    const canEdit = await canEditResource(customer.created_by);
+    if (!canEdit) {
+        return {
+            errors: {},
+            message: "Unauthorized: You can only edit customers you created.",
         };
     }
 
@@ -358,15 +474,15 @@ export async function updateCustomer(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to update customer."
+            message: "Missing or invalid fields. Failed to update customer.",
         };
     }
 
     const imageFile = formData.get("imageFile");
     if (!(imageFile instanceof File) || imageFile.size === 0) {
         return {
-            errors: {}, 
-            message: "Please upload a new customer photo."
+            errors: {},
+            message: "Please upload a new customer photo.",
         };
     }
 
@@ -381,9 +497,9 @@ export async function updateCustomer(
         `;
     } catch (error) {
         console.error(error);
-        return { 
+        return {
             errors: {},
-            message: "Database Error: Failed to update customer." 
+            message: "Database Error: Failed to update customer.",
         };
     }
 
@@ -393,7 +509,7 @@ export async function updateCustomer(
         console.error(error);
         return {
             errors: {},
-            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
+            message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
         };
     }
 
@@ -404,10 +520,27 @@ export async function updateCustomer(
 }
 
 export async function deleteCustomer(id: string) {
+    // Fetch customer to check permissions
+    let customer: Customer | undefined;
     try {
-        await checkAdminPermission();
+        const data = await sql<
+            Customer[]
+        >`SELECT * FROM customers WHERE id = ${id}`;
+        customer = data[0];
     } catch (error) {
-        throw new Error("Unauthorized: Only admins can delete customers.");
+        throw new Error("Customer not found.");
+    }
+
+    if (!customer) {
+        throw new Error("Customer not found.");
+    }
+
+    // Check if user can delete this customer
+    const canDelete = await canEditResource(customer.created_by);
+    if (!canDelete) {
+        throw new Error(
+            "Unauthorized: You can only delete customers you created.",
+        );
     }
 
     try {
@@ -439,9 +572,11 @@ const UserFormSchema = z.object({
         .min(6, { message: "Password must be at least 6 characters." })
         .optional()
         .or(z.literal("")),
-    role: z.enum(["admin", "user"], {
-        invalid_type_error: "Please select a valid role.",
-    }),
+    role: z
+        .enum(["admin", "user"], {
+            invalid_type_error: "Please select a valid role.",
+        })
+        .default("user"),
 });
 
 const CreateUser = UserFormSchema.extend({
@@ -450,7 +585,7 @@ const CreateUser = UserFormSchema.extend({
         .min(6, { message: "Password must be at least 6 characters." }),
 });
 
-const UpdateUser = UserFormSchema;
+const UpdateUser = UserFormSchema.omit({ role: true });
 
 export type UserState = {
     errors: {
@@ -465,15 +600,15 @@ export type UserState = {
 };
 
 export async function createUser(
-    prevState: UserState, 
-    formData: FormData
+    prevState: UserState,
+    formData: FormData,
 ): Promise<UserState> {
     try {
         await checkAdminPermission();
     } catch (error) {
         return {
             errors: {},
-            message: "Unauthorized: Only admins can create users."
+            message: "Unauthorized: Only admins can create users.",
         };
     }
 
@@ -488,7 +623,7 @@ export async function createUser(
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to create user."
+            message: "Missing or invalid fields. Failed to create user.",
         };
     }
 
@@ -498,19 +633,93 @@ export async function createUser(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create user in Clerk first
+    let clerkUserId: string;
+    try {
+        const clerkResponse = await fetch("https://api.clerk.com/v1/users", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email_address: [email],
+                first_name: firstName,
+                last_name: lastName,
+                password: password,
+                public_metadata: {
+                    role: role,
+                },
+            }),
+        });
+
+        if (!clerkResponse.ok) {
+            const errorData = await clerkResponse.json();
+            console.error("Clerk API Error:", errorData);
+            return {
+                errors: {},
+                message: `Failed to create user in Clerk: ${errorData.errors?.[0]?.message || "Unknown error"}`,
+            };
+        }
+
+        const clerkUser = await clerkResponse.json();
+        clerkUserId = clerkUser.id;
+    } catch (error) {
+        console.error("Clerk API Error:", error);
+        return {
+            errors: {},
+            message: "Failed to create user authentication account.",
+        };
+    }
+
+    // Get organization_id from current admin
+    const { userId: adminClerkId } = await auth();
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${adminClerkId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch admin organization:", error);
+        return {
+            errors: {},
+            message: "Failed to fetch admin organization.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "Admin not found or no organization assigned.",
+        };
+    }
+
+    // Now create user in database with clerk_user_id
     let userId: string;
     try {
         const result = await sql`
-            INSERT INTO users (id, name, email, password, role)
-            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${hashedPassword}, ${role})
+            INSERT INTO users (id, name, email, password, role, clerk_user_id, organization_id)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${hashedPassword}, ${role}, ${clerkUserId}, ${organizationId})
             RETURNING id
         `;
         userId = result[0].id;
     } catch (error) {
         console.error(error);
+        // Rollback: delete Clerk user if DB insert fails
+        try {
+            await fetch(`https://api.clerk.com/v1/users/${clerkUserId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+                },
+            });
+        } catch (rollbackError) {
+            console.error("Failed to rollback Clerk user:", rollbackError);
+        }
         return {
             errors: {},
-            message: "Database Error: Failed to create user."
+            message: "Database Error: Failed to create user.",
         };
     }
 
@@ -521,7 +730,7 @@ export async function createUser(
             console.error(error);
             return {
                 errors: {},
-                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
+                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
             };
         }
     }
@@ -540,7 +749,7 @@ export async function updateUser(
     } catch (error) {
         return {
             errors: {},
-            message: "Unauthorized: Only admins can update users."
+            message: "Unauthorized: Only admins can update users.",
         };
     }
 
@@ -549,17 +758,16 @@ export async function updateUser(
         lastName: formData.get("lastName"),
         email: formData.get("email"),
         password: formData.get("password"),
-        role: formData.get("role"),
     });
 
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Missing or invalid fields. Failed to update user."
+            message: "Missing or invalid fields. Failed to update user.",
         };
     }
 
-    const { firstName, lastName, email, password, role } = validatedFields.data;
+    const { firstName, lastName, email, password } = validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
@@ -567,21 +775,21 @@ export async function updateUser(
             const hashedPassword = await bcrypt.hash(password, 10);
             await sql`
                 UPDATE users
-                SET name = ${fullName}, email = ${email}, password = ${hashedPassword}, role = ${role}
+                SET name = ${fullName}, email = ${email}, password = ${hashedPassword}
                 WHERE id = ${id}
             `;
         } else {
             await sql`
                 UPDATE users
-                SET name = ${fullName}, email = ${email}, role = ${role}
+                SET name = ${fullName}, email = ${email}
                 WHERE id = ${id}
             `;
         }
     } catch (error) {
         console.error(error);
-        return { 
+        return {
             errors: {},
-            message: "Database Error: Failed to update user." 
+            message: "Database Error: Failed to update user.",
         };
     }
 
@@ -593,7 +801,7 @@ export async function updateUser(
             console.error(error);
             return {
                 errors: {},
-                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`
+                message: `Failed to upload photo: ${error instanceof Error ? error.message : "Unknown error"}`,
             };
         }
     }

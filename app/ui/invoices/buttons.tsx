@@ -2,7 +2,7 @@
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { deleteInvoice } from "@/app/lib/actions";
-import { auth } from "@/auth";
+import { isUserAdmin, getCurrentUser } from "@/app/lib/auth-helpers";
 
 export function CreateInvoice() {
     return (
@@ -15,16 +15,24 @@ export function CreateInvoice() {
         >
             <PlusIcon className="h-5" />
             <span className="">Criar Fatura</span>
-            
         </Link>
     );
 }
 
-export async function UpdateInvoice({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+export async function UpdateInvoice({
+    id,
+    createdBy,
+}: {
+    id: string;
+    createdBy: string | null | undefined;
+}) {
+    const isAdmin = await isUserAdmin();
+    const currentUser = await getCurrentUser();
 
-    if (!isAdmin) {
+    // Show button if admin or if user created this invoice
+    const canEdit = isAdmin || (currentUser && currentUser.id === createdBy);
+
+    if (!canEdit) {
         return null;
     }
 
@@ -39,11 +47,20 @@ export async function UpdateInvoice({ id }: { id: string }) {
     );
 }
 
-export async function DeleteInvoice({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+export async function DeleteInvoice({
+    id,
+    createdBy,
+}: {
+    id: string;
+    createdBy: string | null | undefined;
+}) {
+    const isAdmin = await isUserAdmin();
+    const currentUser = await getCurrentUser();
 
-    if (!isAdmin) {
+    // Show button if admin or if user created this invoice
+    const canDelete = isAdmin || (currentUser && currentUser.id === createdBy);
+
+    if (!canDelete) {
         return null;
     }
 

@@ -11,7 +11,7 @@ import {
     User,
 } from "./definitions";
 import { formatCurrency, formatDateToLocal } from "./utils";
-import { auth } from "@/auth";
+import { auth } from "@clerk/nextjs/server";
 
 export async function fetchUsers() {
     try {
@@ -33,16 +33,54 @@ export async function fetchUsers() {
     }
 }
 
+export async function fetchFilteredUsers(query: string) {
+    try {
+        const data = await sql<User[]>`
+            SELECT 
+                id,
+                name,
+                email,
+                image_url,
+                role
+            FROM users
+            WHERE
+                name ILIKE ${`%${query}%`} OR
+                email ILIKE ${`%${query}%`} OR
+                role ILIKE ${`%${query}%`}
+            ORDER BY name ASC
+        `;
+
+        return data;
+    } catch (error) {
+        console.error("Database Error:", error);
+        throw new Error("Failed to fetch users.");
+    }
+}
+
 // Helper para pegar organization_id da sessão
 async function getOrganizationId(): Promise<string> {
-    const session = await auth();
-    const orgId = (session?.user as any)?.organizationId;
+    const { userId } = await auth();
 
-    if (!orgId) {
-        throw new Error("No organization found for user");
+    if (!userId) {
+        throw new Error("User not authenticated");
     }
 
-    return orgId;
+    // Fetch organization_id from database using clerk_user_id
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${userId}`;
+        const orgId = user[0]?.organization_id;
+
+        if (!orgId) {
+            throw new Error("No organization found for user");
+        }
+
+        return orgId;
+    } catch (error) {
+        console.error("Failed to fetch organization:", error);
+        throw new Error("Failed to fetch user organization");
+    }
 }
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
@@ -153,6 +191,7 @@ export async function fetchFilteredInvoices(
             (Omit<InvoicesTable, "image_url"> & {
                 customer_id: string;
                 image_url: string | null;
+                created_by: string | null;
             })[]
         >`
       SELECT
@@ -163,7 +202,8 @@ export async function fetchFilteredInvoices(
         customers.name,
         customers.email,
         customers.image_url,
-        invoices.customer_id
+        invoices.customer_id,
+        invoices.created_by
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       WHERE
@@ -212,13 +252,14 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
     try {
-        const data = await sql<InvoiceForm[]>`
+        const data = await sql<(InvoiceForm & { created_by?: string })[]>`
       SELECT
         invoices.id,
         invoices.customer_id,
         invoices.amount,
         invoices.status,
-        invoices.date
+        invoices.date,
+        invoices.created_by
       FROM invoices
       WHERE invoices.id = ${id};
     `;
@@ -265,6 +306,7 @@ export async function fetchFilteredCustomers(
               customers.name,
               customers.email,
               customers.image_url,
+              customers.created_by,
               COUNT(invoices.id) AS total_invoices,
               COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
               COALESCE(SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END), 0) AS total_paid
@@ -273,7 +315,7 @@ export async function fetchFilteredCustomers(
             WHERE 
               customers.organization_id = ${organizationId}
               AND (customers.name ILIKE ${`%${query}%`} OR customers.email ILIKE ${`%${query}%`})
-            GROUP BY customers.id, customers.name, customers.email, customers.image_url
+            GROUP BY customers.id, customers.name, customers.email, customers.image_url, customers.created_by
             ORDER BY customers.name ASC
         `;
         const formattedCustomers: FormattedCustomersTable[] = data.map(
@@ -282,6 +324,7 @@ export async function fetchFilteredCustomers(
                 name: customer.name,
                 email: customer.email,
                 image_url: customer.image_url || DEFAULT_AVATAR,
+                created_by: customer.created_by,
                 total_invoices: Number(customer.total_invoices),
                 total_pending: formatCurrency(customer.total_pending),
                 total_paid: formatCurrency(customer.total_paid),
@@ -298,7 +341,7 @@ export async function fetchFilteredCustomers(
 export async function fetchCustomerById(id: string) {
     try {
         const data = await sql<Customer[]>`
-      SELECT id, name, email, image_url
+      SELECT id, name, email, image_url, created_by
       FROM customers
       WHERE id = ${id}
     `;
@@ -308,24 +351,6 @@ export async function fetchCustomerById(id: string) {
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch customer.");
-    }
-}
-
-export async function fetchFilteredUsers(query: string) {
-    try {
-        const data = await sql<User[]>`
-      SELECT id, name, email, role, image_url
-      FROM users
-      WHERE
-        name ILIKE ${`%${query}%`} OR
-        email ILIKE ${`%${query}%`}
-      ORDER BY name ASC
-    `;
-
-        return data;
-    } catch (error) {
-        console.error("Database Error:", error);
-        throw new Error("Failed to fetch users table.");
     }
 }
 

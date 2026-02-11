@@ -1,18 +1,12 @@
 // app/ui/customers/buttons.tsx
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { auth } from "@/auth";
 import { deleteCustomer } from "@/app/lib/actions";
 import { DeleteCustomerButton } from "./delete-customer-button";
+import { isUserAdmin, getCurrentUser } from "@/app/lib/auth-helpers";
 
 export async function AddCustomerButton() {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
-
-    if (!isAdmin) {
-        return null;
-    }
-
+    // Any logged-in user can create a customer
     return (
         <Link
             href="/dashboard/customers/create"
@@ -24,11 +18,20 @@ export async function AddCustomerButton() {
     );
 }
 
-export async function UpdateCustomer({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+export async function UpdateCustomer({
+    id,
+    createdBy,
+}: {
+    id: string;
+    createdBy: string | null | undefined;
+}) {
+    const isAdmin = await isUserAdmin();
+    const currentUser = await getCurrentUser();
 
-    if (!isAdmin) {
+    // Show button if admin or if user created this customer
+    const canEdit = isAdmin || (currentUser && currentUser.id === createdBy);
+
+    if (!canEdit) {
         return null;
     }
 
@@ -43,11 +46,20 @@ export async function UpdateCustomer({ id }: { id: string }) {
     );
 }
 
-export async function DeleteCustomer({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+export async function DeleteCustomer({
+    id,
+    createdBy,
+}: {
+    id: string;
+    createdBy: string | null | undefined;
+}) {
+    const isAdmin = await isUserAdmin();
+    const currentUser = await getCurrentUser();
 
-    if (!isAdmin) {
+    // Show button if admin or if user created this customer
+    const canDelete = isAdmin || (currentUser && currentUser.id === createdBy);
+
+    if (!canDelete) {
         return null;
     }
 

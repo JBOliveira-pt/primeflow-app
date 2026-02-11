@@ -55,8 +55,14 @@ export default async function InvoicesTable({
                                         </p>
                                     </div>
                                     <div className="flex justify-end gap-2">
-                                        <UpdateInvoice id={invoice.id} />
-                                        <DeleteInvoice id={invoice.id} />
+                                        <UpdateInvoice
+                                            id={invoice.id}
+                                            createdBy={invoice.created_by}
+                                        />
+                                        <DeleteInvoice
+                                            id={invoice.id}
+                                            createdBy={invoice.created_by}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -65,7 +71,9 @@ export default async function InvoicesTable({
                         {/* Empty state mobile */}
                         {invoices?.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-12 px-4">
-                                <p className="text-gray-500 text-sm">Nenhuma fatura encontrada</p>
+                                <p className="text-gray-500 text-sm">
+                                    Nenhuma fatura encontrada
+                                </p>
                             </div>
                         )}
                     </div>
@@ -146,12 +154,20 @@ export default async function InvoicesTable({
                                         {formatDateToLocal(invoice.date)}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4">
-                                        <InvoiceStatus status={invoice.status} />
+                                        <InvoiceStatus
+                                            status={invoice.status}
+                                        />
                                     </td>
                                     <td className="whitespace-nowrap py-4 pl-3 pr-6">
                                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <UpdateInvoice id={invoice.id} />
-                                            <DeleteInvoice id={invoice.id} />
+                                            <UpdateInvoice
+                                                id={invoice.id}
+                                                createdBy={invoice.created_by}
+                                            />
+                                            <DeleteInvoice
+                                                id={invoice.id}
+                                                createdBy={invoice.created_by}
+                                            />
                                         </div>
                                     </td>
                                 </tr>
@@ -163,12 +179,26 @@ export default async function InvoicesTable({
                     {invoices?.length === 0 && (
                         <div className="hidden md:flex flex-col items-center justify-center py-12">
                             <div className="p-3 bg-gray-800 rounded-full mb-4">
-                                <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <svg
+                                    className="w-6 h-6 text-gray-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
                                 </svg>
                             </div>
-                            <p className="text-gray-500 text-sm">Nenhuma fatura encontrada</p>
-                            <p className="text-gray-600 text-xs mt-1">Tente ajustar os filtros de busca</p>
+                            <p className="text-gray-500 text-sm">
+                                Nenhuma fatura encontrada
+                            </p>
+                            <p className="text-gray-600 text-xs mt-1">
+                                Tente ajustar os filtros de busca
+                            </p>
                         </div>
                     )}
                 </div>

@@ -14,7 +14,6 @@ import {
     KeyIcon,
     XMarkIcon,
     PencilIcon,
-    ShieldCheckIcon,
     ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
@@ -45,8 +44,8 @@ export default function EditUserForm({ user }: { user: User }) {
 
     const resetImage = () => {
         setPreview(null);
-        const input = document.getElementById('imageFile') as HTMLInputElement;
-        if (input) input.value = '';
+        const input = document.getElementById("imageFile") as HTMLInputElement;
+        if (input) input.value = "";
     };
 
     // Helper function para renderizar erros
@@ -87,12 +86,14 @@ export default function EditUserForm({ user }: { user: User }) {
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${
-                                user.role === 'admin' 
-                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
-                                    : 'bg-gray-800 text-gray-400 border-gray-700'
-                            }`}>
-                                {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                            <span
+                                className={`px-2.5 py-1 text-xs font-medium rounded-full border ${
+                                    user.role === "admin"
+                                        ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                        : "bg-gray-800 text-gray-400 border-gray-700"
+                                }`}
+                            >
+                                {user.role === "admin" ? "Admin" : "Usuário"}
                             </span>
                             <span className="px-2.5 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">
                                 ID: {user.id.slice(0, 8)}
@@ -123,7 +124,11 @@ export default function EditUserForm({ user }: { user: User }) {
                             />
                             <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div id="firstName-error" aria-live="polite" aria-atomic="true">
+                        <div
+                            id="firstName-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
                             {renderErrors(state.errors?.firstName)}
                         </div>
                     </div>
@@ -148,7 +153,11 @@ export default function EditUserForm({ user }: { user: User }) {
                             />
                             <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div id="lastName-error" aria-live="polite" aria-atomic="true">
+                        <div
+                            id="lastName-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
                             {renderErrors(state.errors?.lastName)}
                         </div>
                     </div>
@@ -186,7 +195,9 @@ export default function EditUserForm({ user }: { user: User }) {
                         className="block text-sm font-medium text-gray-300"
                     >
                         Nova Senha
-                        <span className="text-gray-500 font-normal ml-1">(deixe em branco para manter a atual)</span>
+                        <span className="text-gray-500 font-normal ml-1">
+                            (deixe em branco para manter a atual)
+                        </span>
                     </label>
                     <div className="relative">
                         <input
@@ -199,7 +210,11 @@ export default function EditUserForm({ user }: { user: User }) {
                         />
                         <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
-                    <div id="password-error" aria-live="polite" aria-atomic="true">
+                    <div
+                        id="password-error"
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
                         {renderErrors(state.errors?.password)}
                     </div>
                 </div>
@@ -209,7 +224,7 @@ export default function EditUserForm({ user }: { user: User }) {
                     <label className="block text-sm font-medium text-gray-300">
                         Foto do Usuário
                     </label>
-                    
+
                     <div className="flex items-start gap-4">
                         {/* Current/Preview Image */}
                         <div className="relative shrink-0">
@@ -242,13 +257,17 @@ export default function EditUserForm({ user }: { user: User }) {
                                     <ArrowPathIcon className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
                                     <div>
                                         <p className="text-sm text-gray-400">
-                                            <span className="font-medium text-gray-300">Alterar foto</span>
+                                            <span className="font-medium text-gray-300">
+                                                Alterar foto
+                                            </span>
                                         </p>
-                                        <p className="text-xs text-gray-500">PNG, JPG ou GIF (MAX. 2MB)</p>
+                                        <p className="text-xs text-gray-500">
+                                            PNG, JPG ou GIF (MAX. 2MB)
+                                        </p>
                                     </div>
                                 </div>
                             </label>
-                            
+
                             <input
                                 id="imageFile"
                                 name="imageFile"
@@ -269,37 +288,6 @@ export default function EditUserForm({ user }: { user: User }) {
 
                     <div id="image-error" aria-live="polite" aria-atomic="true">
                         {renderErrors(state.errors?.imageFile)}
-                    </div>
-                </div>
-
-                {/* Role */}
-                <div className="space-y-2">
-                    <label
-                        htmlFor="role"
-                        className="block text-sm font-medium text-gray-300"
-                    >
-                        Função
-                    </label>
-                    <div className="relative">
-                        <select
-                            id="role"
-                            name="role"
-                            className="peer block w-full cursor-pointer rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none"
-                            defaultValue={user.role || "user"}
-                            aria-describedby="role-error"
-                        >
-                            <option value="user" className="bg-gray-800">Usuário</option>
-                            <option value="admin" className="bg-gray-800">Administrador</option>
-                        </select>
-                        <ShieldCheckIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                            <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div id="role-error" aria-live="polite" aria-atomic="true">
-                        {renderErrors(state.errors?.role)}
                     </div>
                 </div>
 

@@ -2,12 +2,11 @@
 import Image from "next/image";
 import { User } from "@/app/lib/definitions";
 import { UpdateUser, DeleteUser } from "@/app/ui/users/buttons";
-import { auth } from "@/auth";
 import { ShieldCheckIcon, UserIcon } from "@heroicons/react/24/outline";
+import { isUserAdmin } from "@/app/lib/auth-helpers";
 
 export default async function UsersTable({ users }: { users: User[] }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+    const isAdmin = await isUserAdmin();
 
     return (
         <div className="w-full">
@@ -40,12 +39,16 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                                                user.role === 'admin' 
-                                                    ? 'bg-purple-500/10 text-purple-400' 
-                                                    : 'bg-gray-800 text-gray-400'
-                                            }`}>
-                                                {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                                            <span
+                                                className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+                                                    user.role === "admin"
+                                                        ? "bg-purple-500/10 text-purple-400"
+                                                        : "bg-gray-800 text-gray-400"
+                                                }`}
+                                            >
+                                                {user.role === "admin"
+                                                    ? "Admin"
+                                                    : "Usuário"}
                                             </span>
                                         </div>
                                         {isAdmin && (
@@ -63,7 +66,9 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                         <div className="p-3 bg-gray-800 rounded-full mb-3">
                                             <UserIcon className="w-6 h-6 text-gray-500" />
                                         </div>
-                                        <p className="text-gray-500 text-sm">Nenhum usuário encontrado</p>
+                                        <p className="text-gray-500 text-sm">
+                                            Nenhum usuário encontrado
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -95,15 +100,17 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                                 scope="col"
                                                 className="relative py-4 pl-3 pr-6"
                                             >
-                                                <span className="sr-only">Ações</span>
+                                                <span className="sr-only">
+                                                    Ações
+                                                </span>
                                             </th>
                                         )}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-800">
                                     {users.map((user) => (
-                                        <tr 
-                                            key={user.id} 
+                                        <tr
+                                            key={user.id}
                                             className="hover:bg-gray-800/50 transition-colors group"
                                         >
                                             <td className="whitespace-nowrap py-4 pl-6 pr-3">
@@ -124,12 +131,14 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                                 {user.email}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${
-                                                    user.role === 'admin' 
-                                                        ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
-                                                        : 'bg-gray-800 text-gray-400 border border-gray-700'
-                                                }`}>
-                                                    {user.role === 'admin' ? (
+                                                <span
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${
+                                                        user.role === "admin"
+                                                            ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                                            : "bg-gray-800 text-gray-400 border border-gray-700"
+                                                    }`}
+                                                >
+                                                    {user.role === "admin" ? (
                                                         <>
                                                             <ShieldCheckIcon className="w-3.5 h-3.5" />
                                                             Admin
@@ -145,8 +154,12 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                             {isAdmin && (
                                                 <td className="whitespace-nowrap py-4 pl-3 pr-6">
                                                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <UpdateUser id={user.id} />
-                                                        <DeleteUser id={user.id} />
+                                                        <UpdateUser
+                                                            id={user.id}
+                                                        />
+                                                        <DeleteUser
+                                                            id={user.id}
+                                                        />
                                                     </div>
                                                 </td>
                                             )}
@@ -161,8 +174,12 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                     <div className="p-3 bg-gray-800 rounded-full mb-4">
                                         <UserIcon className="w-6 h-6 text-gray-500" />
                                     </div>
-                                    <p className="text-gray-500 text-sm">Nenhum usuário encontrado</p>
-                                    <p className="text-gray-600 text-xs mt-1">Adicione um novo usuário para começar</p>
+                                    <p className="text-gray-500 text-sm">
+                                        Nenhum usuário encontrado
+                                    </p>
+                                    <p className="text-gray-600 text-xs mt-1">
+                                        Adicione um novo usuário para começar
+                                    </p>
                                 </div>
                             )}
                         </div>

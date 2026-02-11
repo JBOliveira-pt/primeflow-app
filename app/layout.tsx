@@ -1,6 +1,7 @@
 import "@/app/ui/global.css";
 import { inter } from "@/app/ui/fonts";
 import { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
     title: "PrimeFlow Dashboard",
@@ -17,12 +18,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className="h-full">
-            <body
-                className={`${inter.className} h-full bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100`}
-            >
-                {children}
-            </body>
-        </html>
+        <ClerkProvider>
+            <html lang="en" className="h-full">
+                <body
+                    className={`${inter.className} h-full bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100`}
+                >
+                    {children}
+                </body>
+            </html>
+        </ClerkProvider>
     );
 }

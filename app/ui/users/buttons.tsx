@@ -1,13 +1,12 @@
 // app/ui/users/buttons.tsx
 import { PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { auth } from "@/auth";
 import { deleteUser } from "@/app/lib/actions";
 import { DeleteUserButton } from "./delete-user-button";
+import { isUserAdmin } from "@/app/lib/auth-helpers";
 
 export async function AddUserButton() {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+    const isAdmin = await isUserAdmin();
 
     if (!isAdmin) {
         return null;
@@ -25,8 +24,7 @@ export async function AddUserButton() {
 }
 
 export async function UpdateUser({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+    const isAdmin = await isUserAdmin();
 
     if (!isAdmin) {
         return null;
@@ -44,12 +42,24 @@ export async function UpdateUser({ id }: { id: string }) {
 }
 
 export async function DeleteUser({ id }: { id: string }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+    const isAdmin = await isUserAdmin();
 
     if (!isAdmin) {
         return null;
     }
 
-    return <DeleteUserButton id={id} deleteAction={deleteUser} />;
+    // Check if the user being deleted is an admin
+    const sql = (await import("postgres")).default(process.env.POSTGRES_URL!, {
+        ssl: "require",
+    });
+    const targetUser = await sql`SELECT role FROM users WHERE id = ${id}`;
+    const isTargetAdmin = targetUser[0]?.role === "admin";
+
+    return (
+        <DeleteUserButton
+            id={id}
+            deleteAction={deleteUser}
+            isAdmin={isTargetAdmin}
+        />
+    );
 }

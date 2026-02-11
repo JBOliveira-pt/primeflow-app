@@ -1,26 +1,17 @@
 // app/ui/dashboard/sidenav.tsx
 "use client";
 
-import {
-    LogOut,
-    User,
-    Users,
-    History,
-    Home,
-    Menu,
-    X,
-    Plus,
-} from "lucide-react";
+import { LogOut, User, Users, History, Home, Menu, X } from "lucide-react";
 import Link from "next/link";
 import AcmeLogo from "@/app/ui/acme-logo";
-import { signOut } from "next-auth/react";
+import { SignOutButton, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { DashboardHeader } from "@/app/components/Header";
-import { Button } from "@/app/components/button";
 
 export default function SideNav() {
     const [isOpen, setIsOpen] = useState(false);
+    const { isLoaded, user } = useUser();
 
     // Botão do menu mobile para passar ao header
     const mobileMenuTrigger = (
@@ -33,11 +24,17 @@ export default function SideNav() {
         </button>
     );
 
-    // Dados do usuário (você pode pegar da sessão)
+    // Dados do usuário via Clerk
     const userData = {
-        nome: "João Silva", //TODO - pegar nome real do usuário na base de dados com uma query com name (tabela users)
-        role: "Admin", //TODO - pegar nome real do usuário na base de dados com uma query com role (tabela users)
-        foto: undefined, //TODO - pegar foto real do usuário na base de dados com uma query com image_url (tabela users)
+        name:
+            isLoaded && user
+                ? user.fullName || user.firstName || "Usuario"
+                : "Usuario",
+        role:
+            isLoaded && user
+                ? (user.publicMetadata?.role as string) || "user"
+                : "user",
+        foto: isLoaded && user ? user.imageUrl : undefined,
     };
 
     return (
@@ -106,19 +103,18 @@ export default function SideNav() {
 
                 {/* Sign Out Button */}
                 <div className="pt-6 border-t border-gray-900">
-                    <button
-                        onClick={() => {
-                            setIsOpen(false);
-                            signOut({ callbackUrl: "/login" });
-                        }}
-                        className="flex items-center gap-3 text-red-400 hover:text-red-300 transition w-full p-3 rounded-lg hover:bg-red-500/10 group"
-                    >
-                        <LogOut
-                            size={20}
-                            className="group-hover:-translate-x-1 transition-transform"
-                        />
-                        <span className="font-medium">Sair da conta</span>
-                    </button>
+                    <SignOutButton redirectUrl="/login">
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-3 text-red-400 hover:text-red-300 transition w-full p-3 rounded-lg hover:bg-red-500/10 group"
+                        >
+                            <LogOut
+                                size={20}
+                                className="group-hover:-translate-x-1 transition-transform"
+                            />
+                            <span className="font-medium">Sair da conta</span>
+                        </button>
+                    </SignOutButton>
                 </div>
             </aside>
         </>

@@ -2,16 +2,15 @@
 import Image from "next/image";
 import { FormattedCustomersTable } from "@/app/lib/definitions";
 import { UpdateCustomer, DeleteCustomer } from "./buttons";
-import { auth } from "@/auth";
 import { Users } from "lucide-react";
+import { isUserAdmin } from "@/app/lib/auth-helpers";
 
 export default async function CustomersTable({
     customers,
 }: {
     customers: FormattedCustomersTable[];
 }) {
-    const session = await auth();
-    const isAdmin = (session?.user as any)?.role === "admin";
+    const isAdmin = await isUserAdmin();
 
     return (
         <div className="w-full">
@@ -76,16 +75,16 @@ export default async function CustomersTable({
                                         </div>
 
                                         {/* Actions */}
-                                        {isAdmin && (
-                                            <div className="pt-4 flex justify-end gap-2">
-                                                <UpdateCustomer
-                                                    id={customer.id}
-                                                />
-                                                <DeleteCustomer
-                                                    id={customer.id}
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="pt-4 flex justify-end gap-2">
+                                            <UpdateCustomer
+                                                id={customer.id}
+                                                createdBy={customer.created_by}
+                                            />
+                                            <DeleteCustomer
+                                                id={customer.id}
+                                                createdBy={customer.created_by}
+                                            />
+                                        </div>
                                     </div>
                                 ))}
 
@@ -192,18 +191,22 @@ export default async function CustomersTable({
                                                     {customer.total_paid}
                                                 </span>
                                             </td>
-                                            {isAdmin && (
-                                                <td className="whitespace-nowrap py-4 pl-3 pr-6">
-                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <UpdateCustomer
-                                                            id={customer.id}
-                                                        />
-                                                        <DeleteCustomer
-                                                            id={customer.id}
-                                                        />
-                                                    </div>
-                                                </td>
-                                            )}
+                                            <td className="whitespace-nowrap py-4 pl-3 pr-6">
+                                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <UpdateCustomer
+                                                        id={customer.id}
+                                                        createdBy={
+                                                            customer.created_by
+                                                        }
+                                                    />
+                                                    <DeleteCustomer
+                                                        id={customer.id}
+                                                        createdBy={
+                                                            customer.created_by
+                                                        }
+                                                    />
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

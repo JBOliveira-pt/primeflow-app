@@ -37,6 +37,7 @@ export type Customer = {
     email: string;
     image_url: string;
     organization_id?: string; // ✅ Adicionado
+    created_by?: string; // UUID do user que criou
 };
 
 export type CustomerField = {
@@ -49,6 +50,7 @@ export type CustomersTableType = {
     name: string;
     email: string;
     image_url: string;
+    created_by: string | null;
     total_invoices: number;
     total_pending: number;
     total_paid: number;
@@ -59,6 +61,7 @@ export type FormattedCustomersTable = {
     name: string;
     email: string;
     image_url: string;
+    created_by: string | null;
     total_invoices: number;
     total_pending: string; // ✅ Formatado como string
     total_paid: string; // ✅ Formatado como string
@@ -76,6 +79,7 @@ export type Invoice = {
     // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
     status: "pending" | "paid";
     organization_id?: string; // ✅ Adicionado
+    created_by?: string; // UUID do user que criou
 };
 
 export type InvoiceForm = {
@@ -104,10 +108,10 @@ export type LatestInvoice = {
     email: string;
     amount: string;
     date: string;
-    status: 'pending' | 'paid';
+    status: "pending" | "paid";
 };
 
-export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount' | 'date'> & {
+export type LatestInvoiceRaw = Omit<LatestInvoice, "amount" | "date"> & {
     amount: number;
     date: string;
 };

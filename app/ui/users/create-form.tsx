@@ -33,8 +33,8 @@ export default function CreateUserForm() {
 
     const resetImage = () => {
         setPreview(null);
-        const input = document.getElementById('imageFile') as HTMLInputElement;
-        if (input) input.value = '';
+        const input = document.getElementById("imageFile") as HTMLInputElement;
+        if (input) input.value = "";
     };
 
     // Helper function para renderizar erros
@@ -88,7 +88,11 @@ export default function CreateUserForm() {
                             />
                             <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div id="firstName-error" aria-live="polite" aria-atomic="true">
+                        <div
+                            id="firstName-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
                             {renderErrors(state.errors?.firstName)}
                         </div>
                     </div>
@@ -112,7 +116,11 @@ export default function CreateUserForm() {
                             />
                             <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
-                        <div id="lastName-error" aria-live="polite" aria-atomic="true">
+                        <div
+                            id="lastName-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
                             {renderErrors(state.errors?.lastName)}
                         </div>
                     </div>
@@ -161,8 +169,14 @@ export default function CreateUserForm() {
                         />
                         <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
-                    <p className="text-xs text-gray-500">Mínimo de 6 caracteres</p>
-                    <div id="password-error" aria-live="polite" aria-atomic="true">
+                    <p className="text-xs text-gray-500">
+                        Mínimo de 6 caracteres
+                    </p>
+                    <div
+                        id="password-error"
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
                         {renderErrors(state.errors?.password)}
                     </div>
                 </div>
@@ -172,7 +186,7 @@ export default function CreateUserForm() {
                     <label className="block text-sm font-medium text-gray-300">
                         Foto do Usuário
                     </label>
-                    
+
                     <div className="flex items-start gap-4">
                         {/* Preview */}
                         <div className="relative shrink-0">
@@ -208,13 +222,17 @@ export default function CreateUserForm() {
                                     <PhotoIcon className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
                                     <div>
                                         <p className="text-sm text-gray-400">
-                                            <span className="font-medium text-gray-300">Clique para enviar</span>
+                                            <span className="font-medium text-gray-300">
+                                                Clique para enviar
+                                            </span>
                                         </p>
-                                        <p className="text-xs text-gray-500">PNG, JPG ou GIF (MAX. 2MB)</p>
+                                        <p className="text-xs text-gray-500">
+                                            PNG, JPG ou GIF (MAX. 2MB)
+                                        </p>
                                     </div>
                                 </div>
                             </label>
-                            
+
                             <input
                                 id="imageFile"
                                 name="imageFile"
@@ -238,36 +256,8 @@ export default function CreateUserForm() {
                     </div>
                 </div>
 
-                {/* Role */}
-                <div className="space-y-2">
-                    <label
-                        htmlFor="role"
-                        className="block text-sm font-medium text-gray-300"
-                    >
-                        Função
-                    </label>
-                    <div className="relative">
-                        <select
-                            id="role"
-                            name="role"
-                            className="peer block w-full cursor-pointer rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-10 text-sm text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none"
-                            defaultValue="user"
-                            aria-describedby="role-error"
-                        >
-                            <option value="user" className="bg-gray-800">Usuário</option>
-                            <option value="admin" className="bg-gray-800">Administrador</option>
-                        </select>
-                        <ShieldCheckIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                            <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div id="role-error" aria-live="polite" aria-atomic="true">
-                        {renderErrors(state.errors?.role)}
-                    </div>
-                </div>
+                {/* Role - Hidden, always user */}
+                <input type="hidden" name="role" value="user" />
 
                 {/* Error Message */}
                 {state.message && (

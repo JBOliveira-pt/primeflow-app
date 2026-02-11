@@ -1,4 +1,4 @@
-import { fetchUsers } from "@/app/lib/data";
+import { fetchFilteredUsers } from "@/app/lib/data";
 import { AddUserButton } from "@/app/ui/users/buttons";
 import UsersTable from "@/app/ui/users/table";
 import Search from "@/app/ui/search";
@@ -9,22 +9,25 @@ import { Users } from "lucide-react";
 export default async function Page({
     searchParams,
 }: {
-    searchParams?: {
+    searchParams?: Promise<{
         query?: string;
-    };
+    }>;
 }) {
-    const query = searchParams?.query || "";
-    const users = await fetchUsers();
+    const resolvedSearchParams = await searchParams;
+    const query = resolvedSearchParams?.query || "";
+    const users = await fetchFilteredUsers(query);
 
     return (
         <div className="bg-gray-950 w-full p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-3">
-                        <h1 className="text-xl text-center lg:text-start  md:text-3xl font-bold text-white">Usuários</h1>
-                        <p className="text-sm text-gray-400 text-center lg:text-start">
-                            Gerencie os usuários do sistema
-                        </p>
+                    <h1 className="text-xl text-center lg:text-start  md:text-3xl font-bold text-white">
+                        Usuários
+                    </h1>
+                    <p className="text-sm text-gray-400 text-center lg:text-start">
+                        Gerencie os usuários do sistema
+                    </p>
                 </div>
             </div>
 
