@@ -277,12 +277,15 @@ export async function fetchInvoiceById(id: string) {
 }
 
 export async function fetchCustomers() {
+    const organizationId = await getOrganizationId();
+
     try {
         const customers = await sql<CustomerField[]>`
       SELECT
         id,
         name
       FROM customers
+      WHERE organization_id = ${organizationId}
       ORDER BY name ASC
     `;
 

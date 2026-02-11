@@ -60,7 +60,8 @@ export async function POST(req: Request) {
             // New user signed up - just create user record with NULL organization_id
             // Organization will be created in /api/onboarding page
             const email = email_addresses[0]?.email_address;
-            const name = `${first_name || ""} ${last_name || ""}`.trim() || "User";
+            const name =
+                `${first_name || ""} ${last_name || ""}`.trim() || "User";
 
             if (!email) {
                 console.error("[WEBHOOK] No email provided");
@@ -82,7 +83,9 @@ export async function POST(req: Request) {
           SET clerk_user_id = ${id}, image_url = ${image_url || null}
           WHERE email = ${email}
         `;
-                console.log(`[WEBHOOK] ✅ Updated existing user with Clerk ID: ${id}`);
+                console.log(
+                    `[WEBHOOK] ✅ Updated existing user with Clerk ID: ${id}`,
+                );
             } else {
                 console.log(`[WEBHOOK] Creating new user for: ${email}`);
                 // New signup via Clerk - create user with NULL organization_id
