@@ -20,6 +20,8 @@ export default function SignUpPage() {
                 }}
                 signInUrl="/login"
                 forceRedirectUrl="/dashboard"
+                routing="path"
+                path="/signup"
             />
         </main>
     );

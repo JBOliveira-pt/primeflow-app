@@ -50,33 +50,40 @@ export async function POST(req: Request) {
     const eventType = evt.type;
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
-    console.log(`Webhook Event Type: ${eventType}`);
-    console.log(`Webhook Event Data:`, evt.data);
+    console.log(`[WEBHOOK] Event Type: ${eventType}`);
+    console.log(`[WEBHOOK] User ID: ${id}`);
+    console.log(`[WEBHOOK] Email: ${email_addresses?.[0]?.email_address}`);
+    console.log(`[WEBHOOK] Name: ${first_name} ${last_name}`);
 
     try {
         if (eventType === "user.created") {
             // New user signed up
             const email = email_addresses[0]?.email_address;
-            const name = `${first_name || ""} ${last_name || ""}`.trim();
+            const name = `${first_name || ""} ${last_name || ""}`.trim() || "User";
 
             if (!email) {
+                console.error("[WEBHOOK] No email provided");
                 return new Response("No email provided", { status: 400 });
             }
 
+            console.log(`[WEBHOOK] Processing user.created for: ${email}`);
+
             // Check if user already exists (created by admin via dashboard)
             const existingUser = await sql`
-        SELECT id, organization_id FROM users WHERE email = ${email}
+        SELECT id, organization_id, clerk_user_id FROM users WHERE email = ${email}
       `;
 
             if (existingUser.length > 0) {
+                console.log(`[WEBHOOK] User exists in DB: ${email}`);
                 // User was created by admin via dashboard, just update clerk_id
                 await sql`
           UPDATE users 
           SET clerk_user_id = ${id}, image_url = ${image_url || null}
           WHERE email = ${email}
         `;
-                console.log(`Updated existing user with Clerk ID: ${id}`);
+                console.log(`[WEBHOOK] Updated existing user with Clerk ID: ${id}`);
             } else {
+                console.log(`[WEBHOOK] Creating NEW user and organization for: ${email}`);
                 // New signup via Clerk - ALWAYS create new organization
                 const orgName = name
                     ? `${name}'s Organization`
@@ -96,7 +103,9 @@ export async function POST(req: Request) {
           RETURNING id
         `;
                 const organizationId = newOrg[0].id;
-                console.log(`Created new organization: ${orgName} (${organizationId})`);
+                console.log(
+                    `[WEBHOOK] ✅ Created organization: ${orgName} (${organizationId})`,
+                );
 
                 // Create new user as admin of their own organization
                 await sql`
@@ -113,7 +122,9 @@ export async function POST(req: Request) {
           )
         `;
 
-                console.log(`Created new admin user: ${email} in organization ${organizationId}`);
+                console.log(
+                    `[WEBHOOK] ✅ Created admin user: ${email} in org ${organizationId}`,
+                );
             }
 
             return new Response("User synced", { status: 200 });
