@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     title: "Customers | PrimeFlow Dashboard",
 };
 
+// Forçar renderização dinâmica
+export const dynamic = "force-dynamic";
+
 const ITEMS_PER_PAGE = 6;
 
 // Skeleton para o Search

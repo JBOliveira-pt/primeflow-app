@@ -11,6 +11,9 @@ import {
 } from "@/app/ui/skeletons";
 import { getCurrentUser } from "@/app/lib/auth-helpers";
 
+// Forçar renderização dinâmica (requerida para Next.js Production)
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
     const user = await getCurrentUser();
     const userName = user?.name || user?.email?.split("@")[0] || "Usuário";

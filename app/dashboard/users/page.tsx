@@ -6,6 +6,9 @@ import { Suspense } from "react";
 import { UsersTableSkeleton } from "@/app/ui/skeletons";
 import { Users } from "lucide-react";
 
+// Forçar renderização dinâmica
+export const dynamic = "force-dynamic";
+
 export default async function Page({
     searchParams,
 }: {

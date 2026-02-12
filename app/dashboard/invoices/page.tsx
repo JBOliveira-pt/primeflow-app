@@ -12,6 +12,9 @@ export const metadata: Metadata = {
     title: "Invoices | PrimeFlow Dashboard",
 };
 
+// Forçar renderização dinâmica
+export const dynamic = "force-dynamic";
+
 // Skeleton para o Search
 function SearchSkeleton() {
     return (
