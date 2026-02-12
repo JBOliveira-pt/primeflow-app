@@ -117,16 +117,40 @@ async function persistPhotoToR2(
         );
     }
 
+    const tableName = entityType === "customer" ? "customers" : "users";
+
+    let previousImageUrl: string | null = null;
+    try {
+        const previous = await sql<{ image_url: string | null }[]>`
+            SELECT image_url FROM ${sql(tableName)} WHERE id = ${entityId}
+        `;
+        previousImageUrl = previous[0]?.image_url ?? null;
+    } catch (error) {
+        console.error("Failed to fetch previous image URL:", error);
+    }
+
     // Upload to R2
     const imageUrl = await uploadImageToR2(file, entityType, entityId);
 
     // Update database with R2 URL
-    const tableName = entityType === "customer" ? "customers" : "users";
     await sql`
     UPDATE ${sql(tableName)}
     SET image_url = ${imageUrl}
     WHERE id = ${entityId}
   `;
+
+    const r2PublicUrl = process.env.R2_PUBLIC_URL;
+    if (
+        previousImageUrl &&
+        r2PublicUrl &&
+        previousImageUrl.startsWith(r2PublicUrl)
+    ) {
+        try {
+            await deleteImageFromR2(previousImageUrl);
+        } catch (error) {
+            console.error("Failed to delete previous image:", error);
+        }
+    }
 
     return imageUrl;
 }

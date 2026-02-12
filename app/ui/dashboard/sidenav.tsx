@@ -12,6 +12,7 @@ import { DashboardHeader } from "@/app/components/Header";
 export default function SideNav() {
     const [isOpen, setIsOpen] = useState(false);
     const { isLoaded, user: clerkUser } = useUser();
+    const pathname = usePathname();
     const [dbUser, setDbUser] = useState<{
         name: string;
         role: string;
@@ -24,7 +25,9 @@ export default function SideNav() {
             if (!isLoaded || !clerkUser) return;
 
             try {
-                const response = await fetch("/api/debug/user");
+                const response = await fetch("/api/debug/user", {
+                    cache: "no-store",
+                });
                 if (response.ok) {
                     const data = await response.json();
                     if (data.user) {
@@ -41,7 +44,7 @@ export default function SideNav() {
         }
 
         fetchUserData();
-    }, [isLoaded, clerkUser]);
+    }, [isLoaded, clerkUser, pathname]);
 
     // Botão do menu mobile para passar ao header
     const mobileMenuTrigger = (
