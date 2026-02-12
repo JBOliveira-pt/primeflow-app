@@ -1,5 +1,8 @@
 import bcrypt from "bcrypt";
 import postgres from "postgres";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 

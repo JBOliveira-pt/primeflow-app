@@ -5,48 +5,50 @@ import postgres from "postgres";
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
 export async function POST(req: Request) {
+    console.log("[WEBHOOK] ====== WEBHOOK CHAMADO ======");
+
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
     if (!WEBHOOK_SECRET) {
+        console.error("[WEBHOOK] ❌ CLERK_WEBHOOK_SECRET não encontrado!");
         return new Response("Webhook secret not found", { status: 500 });
     }
 
-    // Get headers from request
+    console.log("[WEBHOOK] ✅ Secret encontrado");
+
     const headerPayload = await headers();
     const svix_id = headerPayload.get("svix-id");
     const svix_timestamp = headerPayload.get("svix-timestamp");
     const svix_signature = headerPayload.get("svix-signature");
 
-    // If no headers, return error
     if (!svix_id || !svix_timestamp || !svix_signature) {
+        console.error("[WEBHOOK] ❌ Headers Svix ausentes");
         return new Response("Error occured -- no Svix headers", {
             status: 400,
         });
     }
 
-    // Get body
-    const body = await req.text();
+    console.log("[WEBHOOK] ✅ Headers Svix presentes");
 
-    // Create a new Webhook instance with your secret.
+    const body = await req.text();
     const wh = new Webhook(WEBHOOK_SECRET);
 
     let evt;
 
-    // Verify the webhook
     try {
         evt = wh.verify(body, {
             "svix-id": svix_id,
             "svix-timestamp": svix_timestamp,
             "svix-signature": svix_signature,
         }) as any;
+        console.log("[WEBHOOK] ✅ Assinatura verificada");
     } catch (err) {
-        console.error("Error verifying webhook:", err);
+        console.error("[WEBHOOK] ❌ Erro ao verificar assinatura:", err);
         return new Response("Error occured", {
             status: 400,
         });
     }
 
-    // Extract the data
     const eventType = evt.type;
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
@@ -57,55 +59,100 @@ export async function POST(req: Request) {
 
     try {
         if (eventType === "user.created") {
-            // New user signed up - just create user record with NULL organization_id
-            // Organization will be created in /api/onboarding page
-            const email = email_addresses[0]?.email_address;
+            const email = email_addresses?.[0]?.email_address;
             const name =
-                `${first_name || ""} ${last_name || ""}`.trim() || "User";
+                `${first_name || ""} ${last_name || ""}`.trim() || email;
 
             if (!email) {
-                console.error("[WEBHOOK] No email provided");
-                return new Response("No email provided", { status: 400 });
+                console.error("[WEBHOOK] ❌ Email não fornecido");
+                return new Response("Email not found", { status: 400 });
             }
 
-            console.log(`[WEBHOOK] Processing user.created for: ${email}`);
+            console.log(`[WEBHOOK] 📧 Processando user.created para: ${email}`);
 
-            // Check if user already exists (created by admin via dashboard)
-            const existingUser = await sql`
-        SELECT id, organization_id, clerk_user_id FROM users WHERE email = ${email}
-      `;
+            // Verificar se usuário já existe
+            const existingUsers = await sql`
+                SELECT id, clerk_user_id, organization_id
+                FROM users 
+                WHERE email = ${email}
+            `;
 
-            if (existingUser.length > 0) {
-                console.log(`[WEBHOOK] User exists in DB: ${email}`);
-                // User was created by admin via dashboard, just update clerk_id
-                await sql`
-          UPDATE users 
-          SET clerk_user_id = ${id}, image_url = ${image_url || null}
-          WHERE email = ${email}
-        `;
-                console.log(
-                    `[WEBHOOK] ✅ Updated existing user with Clerk ID: ${id}`,
-                );
+            if (existingUsers.length > 0) {
+                console.log(`[WEBHOOK] ℹ️ Usuário já existe: ${email}`);
+                const existingUser = existingUsers[0];
+
+                if (!existingUser.clerk_user_id) {
+                    console.log("[WEBHOOK] 🔄 Atualizando clerk_user_id...");
+                    await sql`
+                        UPDATE users 
+                        SET clerk_user_id = ${id}, 
+                            image_url = ${image_url || null}
+                        WHERE email = ${email}
+                    `;
+                    console.log(`[WEBHOOK] ✅ Atualizado: ${email}`);
+                } else {
+                    console.log(
+                        `[WEBHOOK] ⚠️ Usuário já tem clerk_user_id: ${existingUser.clerk_user_id}`,
+                    );
+                }
             } else {
-                console.log(`[WEBHOOK] Creating new user for: ${email}`);
-                // New signup via Clerk - create user with NULL organization_id
-                // User will complete organization setup in /onboarding
+                console.log(`[WEBHOOK] 🆕 Criando novo usuário para: ${email}`);
+
+                // 1. Criar organização
+                console.log("[WEBHOOK] 📁 Criando organização...");
+                // Gerar slug único baseado no nome e timestamp
+                const orgName = name + "'s Organization";
+                const baseSlug = orgName
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/^-+|-+$/g, "");
+                const uniqueSlug = `${baseSlug}-${Date.now()}`;
+
+                const orgResult = await sql`
+                    INSERT INTO organizations (id, name, slug, owner_id, created_at, updated_at)
+                    VALUES (
+                        gen_random_uuid(),
+                        ${orgName},
+                        ${uniqueSlug},
+                        ${id},
+                        NOW(),
+                        NOW()
+                    )
+                    RETURNING id
+                `;
+
+                const organizationId = orgResult[0].id;
+                console.log(
+                    `[WEBHOOK] ✅ Organização criada: ${organizationId}`,
+                );
+
+                // 2. Criar usuário como ADMIN
+                console.log("[WEBHOOK] 👤 Criando usuário...");
                 await sql`
-          INSERT INTO users (id, name, email, clerk_user_id, role, organization_id, image_url, password)
-          VALUES (
-            gen_random_uuid(),
-            ${name},
-            ${email},
-            ${id},
-            'user',
-            NULL,
-            ${image_url || null},
-            'clerk-auth'
-          )
-        `;
+                    INSERT INTO users (
+                        id, 
+                        name, 
+                        email, 
+                        clerk_user_id, 
+                        role, 
+                        organization_id, 
+                        image_url, 
+                        password
+                    )
+                    VALUES (
+                        gen_random_uuid(),
+                        ${name},
+                        ${email},
+                        ${id},
+                        'admin',
+                        ${organizationId},
+                        ${image_url || null},
+                        'clerk-auth'
+                    )
+                `;
 
                 console.log(
-                    `[WEBHOOK] ✅ Created user: ${email} → redirects to /onboarding to create organization`,
+                    `[WEBHOOK] ✅✅✅ Usuário criado: ${email} como admin`,
                 );
             }
 
@@ -113,42 +160,43 @@ export async function POST(req: Request) {
         }
 
         if (eventType === "user.updated") {
-            // User updated in Clerk
-            const email = email_addresses[0]?.email_address;
-            const name = `${first_name || ""} ${last_name || ""}`.trim();
+            const email = email_addresses?.[0]?.email_address;
+            const name =
+                `${first_name || ""} ${last_name || ""}`.trim() || email;
 
             if (!email) {
-                return new Response("No email provided", { status: 400 });
+                return new Response("Email not found", { status: 400 });
             }
 
-            // Update user in database
             await sql`
-        UPDATE users 
-        SET 
-          name = ${name},
-          image_url = ${image_url || null},
-          clerk_user_id = ${id}
-        WHERE email = ${email}
-      `;
+                UPDATE users 
+                SET name = ${name},
+                    image_url = ${image_url || null}
+                WHERE clerk_user_id = ${id}
+            `;
 
-            console.log(`Updated user: ${email}`);
+            console.log(`[WEBHOOK] ✅ Usuário atualizado: ${email}`);
             return new Response("User updated", { status: 200 });
         }
 
         if (eventType === "user.deleted") {
-            // User deleted from Clerk
-            // Optionally: soft delete or hard delete the user
             await sql`
-        DELETE FROM users WHERE clerk_user_id = ${id}
-      `;
+                DELETE FROM users 
+                WHERE clerk_user_id = ${id}
+            `;
 
-            console.log(`Deleted user with Clerk ID: ${id}`);
+            console.log(`[WEBHOOK] ✅ Usuário deletado: ${id}`);
             return new Response("User deleted", { status: 200 });
         }
 
+        console.log("[WEBHOOK] ⚠️ Evento não tratado:", eventType);
         return new Response("Event type not handled", { status: 200 });
     } catch (error) {
-        console.error("Error processing webhook:", error);
+        console.error("[WEBHOOK] ❌❌❌ ERRO:", error);
+        console.error(
+            "[WEBHOOK] Stack:",
+            error instanceof Error ? error.stack : "N/A",
+        );
         return new Response(
             `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
             {

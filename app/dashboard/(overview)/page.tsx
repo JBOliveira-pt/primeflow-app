@@ -9,14 +9,11 @@ import {
     LatestInvoicesSkeleton,
     CardsSkeleton,
 } from "@/app/ui/skeletons";
-import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/app/lib/auth-helpers";
 
 export default async function Page() {
-    const user = await currentUser();
-    const userName =
-        user?.firstName ||
-        user?.emailAddresses[0]?.emailAddress?.split("@")[0] ||
-        "Usuário";
+    const user = await getCurrentUser();
+    const userName = user?.name || user?.email?.split("@")[0] || "Usuário";
 
     return (
         <div className="bg-gray-50 dark:bg-gray-950 w-full min-h-screen p-6">
