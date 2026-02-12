@@ -170,13 +170,15 @@ export async function createInvoice(
         };
     }
 
-    // Get user's database ID from clerk_user_id
+    // Get user's database ID and organization_id from clerk_user_id
     let creatorId: string | undefined;
+    let organizationId: string | undefined;
     try {
         const user = await sql<
-            { id: string }[]
-        >`SELECT id FROM users WHERE clerk_user_id = ${userId}`;
+            { id: string; organization_id: string }[]
+        >`SELECT id, organization_id FROM users WHERE clerk_user_id = ${userId}`;
         creatorId = user[0]?.id;
+        organizationId = user[0]?.organization_id;
     } catch (error) {
         console.error("Failed to fetch user:", error);
         return {
@@ -189,6 +191,13 @@ export async function createInvoice(
         return {
             errors: {},
             message: "User not found in database.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "User not found or no organization assigned.",
         };
     }
 
@@ -212,8 +221,8 @@ export async function createInvoice(
 
     try {
         await sql`
-            INSERT INTO invoices (customer_id, amount, status, date, created_by)
-            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate}, ${creatorId})
+            INSERT INTO invoices (customer_id, amount, status, date, created_by, organization_id)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate}, ${creatorId}, ${organizationId})
         `;
     } catch (error) {
         console.error(error);
@@ -232,12 +241,43 @@ export async function updateInvoice(
     prevState: State,
     formData: FormData,
 ): Promise<State> {
-    // Fetch invoice to check permissions
+    const { userId } = await auth();
+
+    if (!userId) {
+        return {
+            errors: {},
+            message: "Unauthorized",
+        };
+    }
+
+    // Get user's organization_id
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${userId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch user organization:", error);
+        return {
+            errors: {},
+            message: "Failed to fetch user organization.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "User not found or no organization assigned.",
+        };
+    }
+
+    // Fetch invoice to check permissions and organization
     let invoice: (Invoice & { created_by?: string }) | undefined;
     try {
         const data = await sql<
             (Invoice & { created_by?: string })[]
-        >`SELECT * FROM invoices WHERE id = ${id}`;
+        >`SELECT * FROM invoices WHERE id = ${id} AND organization_id = ${organizationId}`;
         invoice = data[0];
     } catch (error) {
         return {
@@ -288,7 +328,7 @@ export async function updateInvoice(
         `;
     } catch (error) {
         return {
-            errors: {}, // ⬅️ ADICIONE ESTA LINHA
+            errors: {},
             message: "Database Error: Failed to Update Invoice.",
         };
     }
@@ -298,12 +338,34 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-    // Fetch invoice to check permissions
+    const { userId } = await auth();
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    // Get user's organization_id
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${userId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch user organization:", error);
+        throw new Error("Failed to fetch user organization.");
+    }
+
+    if (!organizationId) {
+        throw new Error("User not found or no organization assigned.");
+    }
+
+    // Fetch invoice to check permissions and organization
     let invoice: (Invoice & { created_by?: string }) | undefined;
     try {
         const data = await sql<
             (Invoice & { created_by?: string })[]
-        >`SELECT * FROM invoices WHERE id = ${id}`;
+        >`SELECT * FROM invoices WHERE id = ${id} AND organization_id = ${organizationId}`;
         invoice = data[0];
     } catch (error) {
         throw new Error("Invoice not found.");
@@ -435,12 +497,43 @@ export async function updateCustomer(
     prevState: CustomerState,
     formData: FormData,
 ): Promise<CustomerState> {
-    // Fetch customer to check permissions
+    const { userId } = await auth();
+
+    if (!userId) {
+        return {
+            errors: {},
+            message: "Unauthorized",
+        };
+    }
+
+    // Get user's organization_id
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${userId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch user organization:", error);
+        return {
+            errors: {},
+            message: "Failed to fetch user organization.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "User not found or no organization assigned.",
+        };
+    }
+
+    // Fetch customer to check permissions and organization
     let customer: Customer | undefined;
     try {
         const data = await sql<
             Customer[]
-        >`SELECT * FROM customers WHERE id = ${id}`;
+        >`SELECT * FROM customers WHERE id = ${id} AND organization_id = ${organizationId}`;
         customer = data[0];
     } catch (error) {
         return {
@@ -520,12 +613,34 @@ export async function updateCustomer(
 }
 
 export async function deleteCustomer(id: string) {
-    // Fetch customer to check permissions
+    const { userId } = await auth();
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    // Get user's organization_id
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${userId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch user organization:", error);
+        throw new Error("Failed to fetch user organization.");
+    }
+
+    if (!organizationId) {
+        throw new Error("User not found or no organization assigned.");
+    }
+
+    // Fetch customer to check permissions and organization
     let customer: Customer | undefined;
     try {
         const data = await sql<
             Customer[]
-        >`SELECT * FROM customers WHERE id = ${id}`;
+        >`SELECT * FROM customers WHERE id = ${id} AND organization_id = ${organizationId}`;
         customer = data[0];
     } catch (error) {
         throw new Error("Customer not found.");
@@ -753,6 +868,48 @@ export async function updateUser(
         };
     }
 
+    // Get current admin's organization_id
+    const { userId: adminClerkId } = await auth();
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${adminClerkId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch admin organization:", error);
+        return {
+            errors: {},
+            message: "Failed to fetch admin organization.",
+        };
+    }
+
+    if (!organizationId) {
+        return {
+            errors: {},
+            message: "Admin not found or no organization assigned.",
+        };
+    }
+
+    // Verify that user belongs to admin's organization
+    try {
+        const userCheck = await sql<
+            { id: string }[]
+        >`SELECT id FROM users WHERE id = ${id} AND organization_id = ${organizationId}`;
+        if (userCheck.length === 0) {
+            return {
+                errors: {},
+                message:
+                    "User not found or does not belong to your organization.",
+            };
+        }
+    } catch (error) {
+        return {
+            errors: {},
+            message: "Failed to verify user organization.",
+        };
+    }
+
     const validatedFields = UpdateUser.safeParse({
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
@@ -815,6 +972,37 @@ export async function deleteUser(id: string) {
         await checkAdminPermission();
     } catch (error) {
         throw new Error("Unauthorized: Only admins can delete users.");
+    }
+
+    // Get current admin's organization_id
+    const { userId: adminClerkId } = await auth();
+    let organizationId: string | undefined;
+    try {
+        const user = await sql<
+            { organization_id: string }[]
+        >`SELECT organization_id FROM users WHERE clerk_user_id = ${adminClerkId}`;
+        organizationId = user[0]?.organization_id;
+    } catch (error) {
+        console.error("Failed to fetch admin organization:", error);
+        throw new Error("Failed to fetch admin organization.");
+    }
+
+    if (!organizationId) {
+        throw new Error("Admin not found or no organization assigned.");
+    }
+
+    // Verify that user belongs to admin's organization
+    try {
+        const userCheck = await sql<
+            { id: string }[]
+        >`SELECT id FROM users WHERE id = ${id} AND organization_id = ${organizationId}`;
+        if (userCheck.length === 0) {
+            throw new Error(
+                "User not found or does not belong to your organization.",
+            );
+        }
+    } catch (error) {
+        throw new Error("Failed to verify user organization.");
     }
 
     try {

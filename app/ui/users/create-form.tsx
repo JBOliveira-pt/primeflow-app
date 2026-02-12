@@ -49,18 +49,18 @@ export default function CreateUserForm() {
 
     return (
         <form action={formAction}>
-            <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 md:p-8">
+            <div className="rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6 md:p-8">
                 {/* Form Header */}
-                <div className="mb-6 pb-6 border-b border-gray-800">
+                <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/10 rounded-lg">
                             <UserPlusIcon className="h-5 w-5 text-blue-500" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-white">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                                 Novo Usuário
                             </h3>
-                            <p className="text-sm text-gray-400 mt-0.5">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                                 Preencha as informações do usuário
                             </p>
                         </div>
@@ -73,7 +73,7 @@ export default function CreateUserForm() {
                     <div className="space-y-2">
                         <label
                             htmlFor="firstName"
-                            className="block text-sm font-medium text-gray-300"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Primeiro Nome
                         </label>
@@ -82,11 +82,11 @@ export default function CreateUserForm() {
                                 id="firstName"
                                 name="firstName"
                                 type="text"
-                                className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                 placeholder="João"
                                 aria-describedby="firstName-error"
                             />
-                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
+                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
                         <div
                             id="firstName-error"
@@ -101,7 +101,7 @@ export default function CreateUserForm() {
                     <div className="space-y-2">
                         <label
                             htmlFor="lastName"
-                            className="block text-sm font-medium text-gray-300"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Sobrenome
                         </label>
@@ -110,11 +110,11 @@ export default function CreateUserForm() {
                                 id="lastName"
                                 name="lastName"
                                 type="text"
-                                className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                 placeholder="Silva"
                                 aria-describedby="lastName-error"
                             />
-                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
+                            <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
                         </div>
                         <div
                             id="lastName-error"
@@ -130,7 +130,7 @@ export default function CreateUserForm() {
                 <div className="mb-6 space-y-2">
                     <label
                         htmlFor="email"
-                        className="block text-sm font-medium text-gray-300"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                         Email
                     </label>
@@ -139,11 +139,11 @@ export default function CreateUserForm() {
                             id="email"
                             name="email"
                             type="email"
-                            className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                            className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                             placeholder="joao.silva@example.com"
                             aria-describedby="email-error"
                         />
-                        <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
+                        <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
                     <div id="email-error" aria-live="polite" aria-atomic="true">
                         {renderErrors(state.errors?.email)}
@@ -154,7 +154,7 @@ export default function CreateUserForm() {
                 <div className="mb-6 space-y-2">
                     <label
                         htmlFor="password"
-                        className="block text-sm font-medium text-gray-300"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                         Senha
                     </label>
@@ -163,11 +163,11 @@ export default function CreateUserForm() {
                             id="password"
                             name="password"
                             type="password"
-                            className="peer block w-full rounded-lg border border-gray-700 bg-gray-800 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                            className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                             placeholder="Digite a senha"
                             aria-describedby="password-error"
                         />
-                        <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500 peer-focus:text-blue-400 transition-colors" />
+                        <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
                     <p className="text-xs text-gray-500">
                         Mínimo de 6 caracteres
@@ -183,7 +183,7 @@ export default function CreateUserForm() {
 
                 {/* Image Upload */}
                 <div className="mb-6 space-y-3">
-                    <label className="block text-sm font-medium text-gray-300">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Foto do Usuário
                     </label>
 
@@ -195,7 +195,7 @@ export default function CreateUserForm() {
                                     <img
                                         src={preview}
                                         alt="Preview"
-                                        className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-700"
+                                        className="w-20 h-20 rounded-full object-cover ring-2 ring-gray-300 dark:ring-gray-700"
                                     />
                                     <button
                                         type="button"
@@ -206,8 +206,8 @@ export default function CreateUserForm() {
                                     </button>
                                 </>
                             ) : (
-                                <div className="w-20 h-20 rounded-full bg-gray-800 border-2 border-dashed border-gray-700 flex items-center justify-center">
-                                    <UserIcon className="w-8 h-8 text-gray-600" />
+                                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
+                                    <UserIcon className="w-8 h-8 text-gray-400 dark:text-gray-600" />
                                 </div>
                             )}
                         </div>
@@ -216,13 +216,13 @@ export default function CreateUserForm() {
                         <div className="flex-1">
                             <label
                                 htmlFor="imageFile"
-                                className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-700 border-dashed rounded-lg cursor-pointer bg-gray-800 hover:bg-gray-800/80 hover:border-blue-500/50 transition-all group"
+                                className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800/80 hover:border-blue-500/50 transition-all group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <PhotoIcon className="w-6 h-6 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                                    <PhotoIcon className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-blue-400 transition-colors" />
                                     <div>
-                                        <p className="text-sm text-gray-400">
-                                            <span className="font-medium text-gray-300">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                                 Clique para enviar
                                             </span>
                                         </p>
@@ -271,7 +271,7 @@ export default function CreateUserForm() {
             <div className="mt-6 flex items-center justify-end gap-4">
                 <Link
                     href="/dashboard/users"
-                    className="flex h-10 items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-4 text-sm font-medium text-gray-300 transition-all hover:bg-gray-700 hover:text-white"
+                    className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 transition-all hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                 >
                     <XMarkIcon className="h-4 w-4" />
                     Cancelar

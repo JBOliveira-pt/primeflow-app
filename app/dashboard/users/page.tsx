@@ -3,7 +3,7 @@ import { AddUserButton } from "@/app/ui/users/buttons";
 import UsersTable from "@/app/ui/users/table";
 import Search from "@/app/ui/search";
 import { Suspense } from "react";
-import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
+import { UsersTableSkeleton } from "@/app/ui/skeletons";
 import { Users } from "lucide-react";
 
 export default async function Page({
@@ -18,15 +18,15 @@ export default async function Page({
     const users = await fetchFilteredUsers(query);
 
     return (
-        <div className="bg-gray-950 w-full p-6">
+        <div className="bg-gray-50 dark:bg-gray-950 w-full min-h-screen p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-xl text-center lg:text-start  md:text-3xl font-bold text-white">
-                        Usuários
+                <div className="flex flex-col w-full justify-between">
+                    <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-gray-900 dark:text-white">
+                        Utilizadores
                     </h1>
-                    <p className="text-sm text-gray-400 text-center lg:text-start">
-                        Gerencie os usuários do sistema
+                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center lg:text-start">
+                        Gerencie os utilizadores do sistema
                     </p>
                 </div>
             </div>
@@ -40,7 +40,7 @@ export default async function Page({
             </div>
 
             {/* Table */}
-            <Suspense fallback={<InvoicesTableSkeleton />}>
+            <Suspense fallback={<UsersTableSkeleton />}>
                 <UsersTable users={users} />
             </Suspense>
         </div>
@@ -51,7 +51,7 @@ export default async function Page({
 function SearchSkeleton() {
     return (
         <div className="relative flex flex-1 max-w-md">
-            <div className="w-full h-10 bg-gray-800 rounded-lg animate-pulse"></div>
+            <div className="w-full h-10 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
         </div>
     );
 }

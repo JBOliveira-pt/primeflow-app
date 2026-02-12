@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@theme {
+    --color-scheme: light dark;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+    :root {
+        color-scheme: light dark;
+    }
+
+    .dark {
+        color-scheme: dark;
+    }
+}
+
 input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;

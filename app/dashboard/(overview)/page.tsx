@@ -9,17 +9,25 @@ import {
     LatestInvoicesSkeleton,
     CardsSkeleton,
 } from "@/app/ui/skeletons";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function Page() {
+    const user = await currentUser();
+    const userName =
+        user?.firstName ||
+        user?.emailAddresses[0]?.emailAddress?.split("@")[0] ||
+        "Usuário";
+
     return (
-        <main className="bg-gray-950 p-6">
+        <div className="bg-gray-50 dark:bg-gray-950 w-full min-h-screen p-6">
             {/* Header da página */}
             <div className="mb-8">
-                <h2 className="text-xl text-center lg:text-start md:text-2xl font-bold text-white">
+                <h2 className="text-xl text-center lg:text-start md:text-2xl font-bold text-gray-900 dark:text-white">
                     Visão Geral
                 </h2>
-                <p className="text-sm text-center lg:text-start md:text-base text-gray-400">
-                    Bem-Vindo de volta ao seu controle
+                <p className="text-sm text-center lg:text-start md:text-base text-gray-600 dark:text-gray-400">
+                    Bem-vindo de volta,{" "}
+                    <span className="font-bold">{userName}</span>!
                 </p>
             </div>
 
@@ -40,6 +48,6 @@ export default async function Page() {
                     <LatestInvoices />
                 </Suspense>
             </div>
-        </main>
+        </div>
     );
 }

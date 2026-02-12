@@ -15,6 +15,8 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function fetchUsers() {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<User[]>`
             SELECT 
                 id,
@@ -23,6 +25,7 @@ export async function fetchUsers() {
                 image_url,
                 role
             FROM users
+            WHERE organization_id = ${organizationId}
             ORDER BY name ASC
         `;
 
@@ -35,6 +38,8 @@ export async function fetchUsers() {
 
 export async function fetchFilteredUsers(query: string) {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<User[]>`
             SELECT 
                 id,
@@ -44,9 +49,12 @@ export async function fetchFilteredUsers(query: string) {
                 role
             FROM users
             WHERE
-                name ILIKE ${`%${query}%`} OR
-                email ILIKE ${`%${query}%`} OR
-                role ILIKE ${`%${query}%`}
+                organization_id = ${organizationId}
+                AND (
+                    name ILIKE ${`%${query}%`} OR
+                    email ILIKE ${`%${query}%`} OR
+                    role ILIKE ${`%${query}%`}
+                )
             ORDER BY name ASC
         `;
 
@@ -89,9 +97,6 @@ const DEFAULT_AVATAR = "https://avatar.vercel.sh/placeholder.png";
 
 export async function fetchRevenue() {
     try {
-        // Artificially delay a response for demo purposes.
-        // Don't do this in production :)
-
         console.log("Fetching revenue data...");
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -109,6 +114,8 @@ export async function fetchRevenue() {
 export async function fetchLatestInvoices() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<
             (Omit<LatestInvoiceRaw, "image_url"> & {
                 customer_id: string;
@@ -127,8 +134,9 @@ export async function fetchLatestInvoices() {
                 invoices.id
             FROM invoices
             JOIN customers ON invoices.customer_id = customers.id
+            WHERE invoices.organization_id = ${organizationId}
             ORDER BY invoices.date DESC
-            LIMIT 5`;
+            LIMIT 6`;
 
         const latestInvoices = data.map((invoice) => ({
             ...invoice,
@@ -146,15 +154,18 @@ export async function fetchLatestInvoices() {
 export async function fetchCardData() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     try {
+        const organizationId = await getOrganizationId();
+
         // You can probably combine these into a single SQL query
         // However, we are intentionally splitting them to demonstrate
         // how to initialize multiple queries in parallel with JS.
-        const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
-        const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
+        const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices WHERE organization_id = ${organizationId}`;
+        const customerCountPromise = sql`SELECT COUNT(*) FROM customers WHERE organization_id = ${organizationId}`;
         const invoiceStatusPromise = sql`SELECT
          SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`;
+         FROM invoices
+         WHERE organization_id = ${organizationId}`;
 
         const data = await Promise.all([
             invoiceCountPromise,
@@ -185,6 +196,7 @@ export async function fetchFilteredInvoices(
     currentPage: number,
 ) {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+    const organizationId = await getOrganizationId();
 
     try {
         const invoices = await sql<
@@ -207,11 +219,14 @@ export async function fetchFilteredInvoices(
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
+        invoices.organization_id = ${organizationId}
+        AND (
+          customers.name ILIKE ${`%${query}%`} OR
+          customers.email ILIKE ${`%${query}%`} OR
+          invoices.amount::text ILIKE ${`%${query}%`} OR
+          invoices.date::text ILIKE ${`%${query}%`} OR
+          invoices.status ILIKE ${`%${query}%`}
+        )
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -231,15 +246,20 @@ export async function fetchFilteredInvoices(
 
 export async function fetchInvoicesPages(query: string) {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql`SELECT COUNT(*)
     FROM invoices
     JOIN customers ON invoices.customer_id = customers.id
     WHERE
-      customers.name ILIKE ${`%${query}%`} OR
-      customers.email ILIKE ${`%${query}%`} OR
-      invoices.amount::text ILIKE ${`%${query}%`} OR
-      invoices.date::text ILIKE ${`%${query}%`} OR
-      invoices.status ILIKE ${`%${query}%`}
+      invoices.organization_id = ${organizationId}
+      AND (
+        customers.name ILIKE ${`%${query}%`} OR
+        customers.email ILIKE ${`%${query}%`} OR
+        invoices.amount::text ILIKE ${`%${query}%`} OR
+        invoices.date::text ILIKE ${`%${query}%`} OR
+        invoices.status ILIKE ${`%${query}%`}
+      )
   `;
 
         const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
@@ -252,6 +272,8 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<(InvoiceForm & { created_by?: string })[]>`
       SELECT
         invoices.id,
@@ -261,7 +283,7 @@ export async function fetchInvoiceById(id: string) {
         invoices.date,
         invoices.created_by
       FROM invoices
-      WHERE invoices.id = ${id};
+      WHERE invoices.id = ${id} AND invoices.organization_id = ${organizationId};
     `;
 
         const invoice = data.map((invoice) => ({
@@ -343,10 +365,12 @@ export async function fetchFilteredCustomers(
 
 export async function fetchCustomerById(id: string) {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<Customer[]>`
       SELECT id, name, email, image_url, created_by
       FROM customers
-      WHERE id = ${id}
+      WHERE id = ${id} AND organization_id = ${organizationId}
     `;
 
         const customer = data[0];
@@ -359,10 +383,12 @@ export async function fetchCustomerById(id: string) {
 
 export async function fetchUserById(id: string) {
     try {
+        const organizationId = await getOrganizationId();
+
         const data = await sql<User[]>`
       SELECT id, name, email, password, role, image_url
       FROM users
-      WHERE id = ${id}
+      WHERE id = ${id} AND organization_id = ${organizationId}
     `;
 
         return data[0] || undefined;
