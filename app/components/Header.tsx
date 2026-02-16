@@ -6,6 +6,7 @@ import { ReactNode, useState } from "react";
 import { Avatar } from "@/app/components/avatar";
 import { Button } from "@/app/components/button";
 import { useTheme } from "@/app/components/theme-provider";
+import { NotificationDropdown } from "@/app/components/NotificationDropdown";
 
 interface DashboardHeaderProps {
     mobileMenuTrigger?: ReactNode;
@@ -52,7 +53,7 @@ export function DashboardHeader({
                         variant="ghost"
                         size="icon"
                         onClick={toggleTheme}
-                        className="rounded-full"
+                        className="rounded-full cursor-pointer"
                     >
                         {theme === "dark" ? (
                             <Moon size={20} />
@@ -61,15 +62,7 @@ export function DashboardHeader({
                         )}
                     </Button>
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full relative"
-                    >
-                        <Bell size={20} />
-                        {/* Badge de notificação */}
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </Button>
+                    <NotificationDropdown />
                 </div>
 
                 {/* Perfil do Usuário */}

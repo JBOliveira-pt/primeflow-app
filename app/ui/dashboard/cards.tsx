@@ -33,10 +33,13 @@ function formatCurrency(value: string | number): string {
 
 export default async function CardWrapper() {
     const {
-        numberOfInvoices,
         numberOfCustomers,
+        numberOfInvoices,
         totalPaidInvoices,
         totalPendingInvoices,
+        numberOfPendingInvoices,
+        percentPaidChange,
+        percentCustomersChange,
     } = await fetchCardData();
 
     return (
@@ -58,7 +61,7 @@ export default async function CardWrapper() {
 
                     <div className="flex items-center gap-1 mt-2">
                         <TrendingUp className="text-green-500 w-3 h-3" />
-                        <span className="text-xs text-green-500">+12.5%</span>
+                        <span className="text-xs text-green-500">{percentPaidChange > 0 ? `+${percentPaidChange.toFixed(2)}%` : `${percentPaidChange.toFixed(2)}%`}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -77,7 +80,7 @@ export default async function CardWrapper() {
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                         <span className="text-xs text-yellow-500">
-                            5 faturas
+                            {numberOfPendingInvoices === 0 ? "Nenhuma fatura pendente" : `${numberOfPendingInvoices} fatura(s) pendente(s)`}
                         </span>
                     </div>
                 </CardContent>
@@ -120,7 +123,7 @@ export default async function CardWrapper() {
                     <div className="flex items-center gap-1 mt-2">
                         <TrendingUp className="text-purple-500 dark:text-purple-400 w-3 h-3" />
                         <span className="text-xs text-purple-500 dark:text-purple-400">
-                            +8%
+                            {percentCustomersChange > 0 ? `+ ${percentCustomersChange.toFixed(2)}%` : `${percentCustomersChange.toFixed(2)}%`} no último mês
                         </span>
                     </div>
                 </CardContent>

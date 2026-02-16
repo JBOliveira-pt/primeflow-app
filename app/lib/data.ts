@@ -166,23 +166,54 @@ export async function fetchCardData() {
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
          FROM invoices
          WHERE organization_id = ${organizationId}`;
+        const pendingCountPromise = sql`SELECT COUNT(*) FROM invoices WHERE organization_id = ${organizationId} AND status = 'pending'`;
+
+        const paidCurrentPromise = sql`SELECT COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) AS paid_current FROM invoices WHERE organization_id = ${organizationId} AND date >= date_trunc('month', current_date)`;
+        const paidPrevPromise = sql`SELECT COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) AS paid_prev FROM invoices WHERE organization_id = ${organizationId} AND date >= date_trunc('month', current_date - interval '1 month') AND date < date_trunc('month', current_date)`;
+        const customersCurrentPromise = sql`SELECT COUNT(*) AS count FROM customers WHERE organization_id = ${organizationId} AND created_at >= date_trunc('month', current_date)`;
+        const customersPrevPromise = sql`SELECT COUNT(*) AS count FROM customers WHERE organization_id = ${organizationId} AND created_at >= date_trunc('month', current_date - interval '1 month') AND created_at < date_trunc('month', current_date)`;
 
         const data = await Promise.all([
             invoiceCountPromise,
             customerCountPromise,
             invoiceStatusPromise,
+            pendingCountPromise,
+            paidCurrentPromise,
+            paidPrevPromise,
+            customersCurrentPromise,
+            customersPrevPromise,
         ]);
 
         const numberOfInvoices = Number(data[0][0].count ?? "0");
         const numberOfCustomers = Number(data[1][0].count ?? "0");
         const totalPaidInvoices = formatCurrency(data[2][0].paid ?? "0");
         const totalPendingInvoices = formatCurrency(data[2][0].pending ?? "0");
+        const numberOfPendingInvoices = Number(data[3][0].count ?? "0");
+
+         const calcPercent = (currentRaw: any, prevRaw: any) => {
+            const current = Number(currentRaw ?? 0);
+            const prev = Number(prevRaw ?? 0);
+            if (prev === 0) return current === 0 ? 0 : 100;
+            return ((current - prev) / prev) * 100;
+        };
+
+        const paidCurrent = Number(data[4][0].paid_current ?? 0);
+        const paidPrev = Number(data[5][0].paid_prev ?? 0);
+        const percentPaidChange = calcPercent(paidCurrent, paidPrev);
+
+        const customersCurrent = Number(data[6][0].count ?? 0);
+        const customersPrev = Number(data[7][0].count ?? 0);
+        const percentCustomersChange = calcPercent(customersCurrent, customersPrev);
+
 
         return {
-            numberOfCustomers,
+           numberOfCustomers,
             numberOfInvoices,
             totalPaidInvoices,
             totalPendingInvoices,
+            numberOfPendingInvoices,
+            percentPaidChange,
+            percentCustomersChange,
         };
     } catch (error) {
         console.error("Database Error:", error);
