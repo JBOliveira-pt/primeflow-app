@@ -1,11 +1,33 @@
 import { Revenue } from './definitions';
 
-export const formatCurrency = (amount: number) => {
-  return (amount / 100).toLocaleString('en-US', {
+export const formatCurrency = (
+  amount: number | string,
+  locale: string = 'en-US',
+  currency: string = 'USD',
+  divideByHundred: boolean = true
+): string => {
+  let numValue: number;
+
+  // Converte string para número
+  if (typeof amount === 'string') {
+    numValue = parseFloat(amount.replace(/[^0-9.-]+/g, ''));
+  } else {
+    numValue = amount;
+  }
+
+  // Divide por 100 se necessário (para centavos)
+  if (divideByHundred) {
+    numValue = numValue / 100;
+  }
+
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
-  });
+    currency: currency,
+  }).format(numValue || 0);
 };
+
+export const formatCurrencyPTBR = (value: string | number) =>
+  formatCurrency(value, 'pt-BR', 'EUR', false);
 
 export const formatDateToLocal = (
   dateStr: string,

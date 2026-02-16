@@ -3,7 +3,7 @@
 import { Bell, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/app/components/button";
-import { formatCurrency } from "@/app/lib/utils";
+import {  formatCurrencyPTBR } from "@/app/lib/utils";
 import { useRouter } from "next/dist/client/components/navigation";
 
 interface Invoice {
@@ -20,11 +20,6 @@ export function NotificationDropdown() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     
-
-    useEffect(() => {
-        fetchPendingInvoices();
-    }, []);
-
     const fetchPendingInvoices = async () => {
         setLoading(true);
         try {
@@ -37,6 +32,19 @@ export function NotificationDropdown() {
             setLoading(false);
         }
     };
+    
+
+    useEffect(() => {
+        fetchPendingInvoices();
+    }, []);
+
+    const handleToggle = () => {
+        if (!isOpen) {
+            fetchPendingInvoices();
+        }
+        setIsOpen(!isOpen);
+    };
+
 
        const handleViewAllInvoices = () => {
         setIsOpen(false);
@@ -49,7 +57,7 @@ export function NotificationDropdown() {
                 variant="ghost"
                 size="icon"
                 className="rounded-full relative cursor-pointer"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => handleToggle()}
             >
                 <Bell size={20} />
                 {/* Badge de notificação */}
@@ -94,7 +102,7 @@ export function NotificationDropdown() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {formatCurrency(invoice.amount)}
+                                                {formatCurrencyPTBR(invoice.amount)}
                                             </p>
                                             <div className="flex items-center gap-1 mt-1 text-yellow-600 dark:text-yellow-500">
                                                 <Clock size={12} />
