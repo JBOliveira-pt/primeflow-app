@@ -1,7 +1,7 @@
 // app/ui/dashboard/sidenav.tsx
 "use client";
 
-import { LogOut, User, Users, History, Home, Menu, X } from "lucide-react";
+import { LogOut, User, Users, History, Home, Menu, X, BarChart3, FileText, CircleUserRound } from "lucide-react";
 import Link from "next/link";
 import AcmeLogo from "@/app/ui/acme-logo";
 import { SignOutButton, useUser } from "@clerk/nextjs";
@@ -111,27 +111,27 @@ export default function SideNav() {
                 {/* Menu de Navegação */}
                 <nav className="flex-1 space-y-2">
                     <NavItem
-                        icon={<Home size={20} />}
+                        icon={<BarChart3 size={20} />}
                         label="Home"
                         href="/dashboard"
                         onClick={() => setIsOpen(false)}
                     />
                     <NavItem
                         href="/dashboard/invoices"
-                        icon={<User size={20} />}
-                        label="Invoices"
+                        icon={<FileText size={20} />}
+                        label="Faturas"
                         onClick={() => setIsOpen(false)}
                     />
                     <NavItem
                         href="/dashboard/customers"
                         icon={<Users size={20} />}
-                        label="Customers"
+                        label="Clientes"
                         onClick={() => setIsOpen(false)}
                     />
                     <NavItem
                         href="/dashboard/users"
-                        icon={<History size={20} />}
-                        label="Users"
+                        icon={<CircleUserRound size={20} />}
+                        label="Usuários"
                         onClick={() => setIsOpen(false)}
                     />
                 </nav>
@@ -141,7 +141,7 @@ export default function SideNav() {
                     <SignOutButton redirectUrl="/login">
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="flex items-center gap-3 text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition w-full p-3 rounded-lg hover:bg-red-500/10 group"
+                            className="flex items-center gap-3 text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 transition w-full p-3 rounded-lg hover:bg-red-500/10 group cursor-pointer"
                         >
                             <LogOut
                                 size={20}

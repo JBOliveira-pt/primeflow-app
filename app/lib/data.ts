@@ -10,7 +10,7 @@ import {
     Revenue,
     User,
 } from "./definitions";
-import { formatCurrency, formatDateToLocal } from "./utils";
+import { formatCurrency, formatCurrencyPTBR, formatDateToLocal } from "./utils";
 import { auth } from "@clerk/nextjs/server";
 
 export async function fetchUsers() {
@@ -99,10 +99,18 @@ export async function fetchRevenue() {
     try {
         console.log("Fetching revenue data...");
         await new Promise((resolve) => setTimeout(resolve, 3000));
+        const organizationId = await getOrganizationId();
 
-        const data = await sql<Revenue[]>`SELECT * FROM revenue`;
+        const data = await sql<Revenue[]>`
+        SELECT * FROM revenue
+        WHERE organization_id = ${organizationId}
+        ORDER BY month DESC LIMIT 12`;
 
         console.log("Data fetch completed after 3 seconds.");
+        console.log("Revenue records found:", data.length);
+        console.log("First month:", data[0]?.month);
+        console.log("Last month:", data[data.length - 1]?.month);
+
 
         return data;
     } catch (error) {

@@ -24,6 +24,7 @@ export function DashboardHeader({
     user,
 }: DashboardHeaderProps) {
     const { theme, toggleTheme } = useTheme();
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
 
     // Pega as iniciais do name para o fallback do avatar
     const getInitials = (name: string) => {
@@ -33,6 +34,10 @@ export function DashboardHeader({
             .join("")
             .toUpperCase()
             .slice(0, 2);
+    };
+
+    const handleNotificationClick = () => {
+        setHasUnreadNotifications(false);
     };
 
     return (
@@ -62,7 +67,9 @@ export function DashboardHeader({
                         )}
                     </Button>
 
-                    <NotificationDropdown />
+                    <div onClick={handleNotificationClick}>
+                        <NotificationDropdown hasUnread={hasUnreadNotifications} />
+                    </div>
                 </div>
 
                 {/* Perfil do Usuário */}

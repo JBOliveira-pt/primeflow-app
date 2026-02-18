@@ -9,6 +9,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
 import { fetchLatestInvoices } from "@/app/lib/data";
+import { formatCurrencyPTBR } from "@/app/lib/utils";
 
 export default async function LatestInvoices() {
     const latestInvoices = await fetchLatestInvoices();
@@ -30,6 +31,7 @@ export default async function LatestInvoices() {
             {/* Lista de Invoices */}
             <div className="flex grow flex-col justify-between rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
                 <div className="divide-y divide-gray-200 dark:divide-gray-800">
+                    
                     {latestInvoices.map((invoice) => {
                         const isPaid = invoice.status === "paid";
 
@@ -107,7 +109,7 @@ export default async function LatestInvoices() {
                                                     : "text-yellow-400",
                                             )}
                                         >
-                                            {invoice.amount}
+                                            {formatCurrencyPTBR(invoice.amount)}
                                         </span>
                                         <span className="text-xs text-gray-500 flex items-center gap-1">
                                             <Clock className="w-3 h-3" />

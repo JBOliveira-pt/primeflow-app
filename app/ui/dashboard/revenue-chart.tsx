@@ -1,11 +1,23 @@
-// app/ui/dashboard/revenue-chart.tsx
-import { generateYAxis } from "@/app/lib/utils";
+"use client";
+
+import { formatCurrencyPTBR, generateYAxis } from "@/app/lib/utils";
 import { CalendarIcon, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Revenue } from "@/app/lib/definitions";
-import { fetchRevenue } from "@/app/lib/data";
+import { useState, useEffect } from "react";
 
-export default async function RevenueChart() {
-    const revenue = await fetchRevenue();
+interface RevenueChartProps {
+    revenue: Revenue[];
+}
+
+export default function RevenueChart({ revenue: allRevenue }: RevenueChartProps) {
+    const [selectedMonths, setSelectedMonths] = useState<3 | 5 | 12>(12);
+    const [revenue, setRevenue] = useState<Revenue[]>([]);
+
+    useEffect(() => {
+        // Filtrar os dados baseado nos meses selecionados
+        const filtered = allRevenue.slice(-selectedMonths);
+        setRevenue(filtered);
+    }, [selectedMonths, allRevenue]);
 
     const chartHeight = 350;
     const { yAxisLabels, topLabel } = generateYAxis(revenue);
@@ -44,9 +56,10 @@ export default async function RevenueChart() {
                         Receita Recente
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Últimos 12 meses
+                        Últimos {selectedMonths} meses
                     </p>
                 </div>
+
                 {growth != 0 && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10">
                         <ArrowUpRight className="w-4 h-4 text-green-500" />
@@ -58,6 +71,23 @@ export default async function RevenueChart() {
             </div>
 
             <div className="rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
+                {/* Botões de filtro */}
+                <div className="flex gap-2 mb-6">
+                    {[3, 5, 12].map((months) => (
+                        <button
+                            key={months}
+                            onClick={() => setSelectedMonths(months as 3 | 5 | 12)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
+                                selectedMonths === months
+                                    ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                            }`}
+                        >
+                            {months}M
+                        </button>
+                    ))}
+                </div>
+
                 {/* Métricas rápidas */}
                 <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
                     <div>
@@ -65,7 +95,7 @@ export default async function RevenueChart() {
                             Total
                         </p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">
-                            € {(totalRevenue / 1000).toFixed(3)}K
+                            {formatCurrencyPTBR(totalRevenue)}
                         </p>
                     </div>
                     <div>
@@ -73,7 +103,7 @@ export default async function RevenueChart() {
                             Média
                         </p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">
-                            € {(averageRevenue / 1000).toFixed(3)}K
+                            {formatCurrencyPTBR(averageRevenue)}
                         </p>
                     </div>
                 </div>
@@ -109,7 +139,7 @@ export default async function RevenueChart() {
                                 >
                                     {/* Tooltip on hover */}
                                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 dark:bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                        R$ {(month.revenue / 1000).toFixed(1)}K
+                                        {formatCurrencyPTBR(month.revenue)}
                                     </div>
 
                                     {/* Barra */}

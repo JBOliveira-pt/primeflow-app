@@ -12,12 +12,23 @@ import {
 } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createInvoice, State } from "@/app/lib/actions";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { formatCurrencyPTBR } from "@/app/lib/utils";
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
     const initialState: State = { message: null, errors: {} };
     const [state, formAction] = useActionState(createInvoice, initialState);
+    const [amount, setAmount] = useState("");
     const today = new Date().toISOString().split("T")[0];
+
+    const formatCurrency = (value: string) => {
+        if (!value) return "";
+        const number = parseFloat(value);
+        return new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+        }).format(number);
+    };
 
     return (
         <form action={formAction}>
@@ -109,12 +120,19 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                             type="number"
                             step="0.01"
                             placeholder="Digite o valor em R$"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
                             className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                             required
                             aria-describedby="amount-error"
                         />
                         <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
                     </div>
+                    {amount && (
+                        <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">
+                            Valor: {formatCurrencyPTBR(amount)}
+                        </p>
+                    )}
                     <div
                         id="amount-error"
                         aria-live="polite"

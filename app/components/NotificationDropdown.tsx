@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/app/components/button";
 import {  formatCurrencyPTBR } from "@/app/lib/utils";
 import { useRouter } from "next/dist/client/components/navigation";
@@ -14,11 +14,17 @@ interface Invoice {
     status: "pending" | "paid";
 }
 
-export function NotificationDropdown() {
+interface NotificationDropdownProps {
+    hasUnread?: boolean;
+}
+
+export function NotificationDropdown({ hasUnread = true }: NotificationDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(false);
+    const [positionAbove, setPositionAbove] = useState(false);
     const router = useRouter();
+    const containerRef = useRef<HTMLDivElement>(null);
     
     const fetchPendingInvoices = async () => {
         setLoading(true);
@@ -33,10 +39,34 @@ export function NotificationDropdown() {
         }
     };
     
-
     useEffect(() => {
         fetchPendingInvoices();
     }, []);
+
+    useEffect(() => {
+        if (isOpen && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const dropdownHeight = 400; // altura aproximada do dropdown
+            const spaceBelow = window.innerHeight - rect.bottom;
+            
+            setPositionAbove(spaceBelow < dropdownHeight);
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     const handleToggle = () => {
         if (!isOpen) {
@@ -45,14 +75,13 @@ export function NotificationDropdown() {
         setIsOpen(!isOpen);
     };
 
-
-       const handleViewAllInvoices = () => {
+    const handleViewAllInvoices = () => {
         setIsOpen(false);
         router.push("/dashboard/invoices");
     };
 
     return (
-        <div className="relative">
+        <div className="relative" ref={containerRef}>
             <Button
                 variant="ghost"
                 size="icon"
@@ -61,14 +90,14 @@ export function NotificationDropdown() {
             >
                 <Bell size={20} />
                 {/* Badge de notificação */}
-                {pendingInvoices.length > 0 && (
+                {hasUnread && pendingInvoices.length > 0 && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 )}
             </Button>
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50">
+                <div className={`absolute ${positionAbove ? 'bottom-12' : 'top-12'} right-0 w-80 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50 animate-in fade-in slide-in-from-top-2 duration-200`}>
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -131,7 +160,6 @@ export function NotificationDropdown() {
                             >
                                 Ver todas as faturas
                             </Button>
-                            
                         </div>
                     )}
                 </div>

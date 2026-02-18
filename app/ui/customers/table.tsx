@@ -4,6 +4,7 @@ import { FormattedCustomersTable } from "@/app/lib/definitions";
 import { UpdateCustomer, DeleteCustomer } from "./buttons";
 import { Users } from "lucide-react";
 import { isUserAdmin } from "@/app/lib/auth-helpers";
+import { formatCurrencyPTBR } from "@/app/lib/utils";
 
 export default async function CustomersTable({
     customers,
@@ -53,7 +54,7 @@ export default async function CustomersTable({
                                                     Pendente
                                                 </p>
                                                 <p className="font-medium text-yellow-400">
-                                                    {customer.total_pending}
+                                                    {formatCurrencyPTBR(customer.total_pending)}
                                                 </p>
                                             </div>
                                             <div className="flex flex-col">
@@ -61,7 +62,7 @@ export default async function CustomersTable({
                                                     Pago
                                                 </p>
                                                 <p className="font-medium text-green-400">
-                                                    {customer.total_paid}
+                                                    {formatCurrencyPTBR(customer.total_paid)}
                                                 </p>
                                             </div>
                                             <div className="flex flex-col">
@@ -183,12 +184,12 @@ export default async function CustomersTable({
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4">
                                                 <span className="text-sm font-medium text-yellow-400">
-                                                    {customer.total_pending}
+                                                    {formatCurrencyPTBR(customer.total_pending)}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4">
                                                 <span className="text-sm font-medium text-green-400">
-                                                    {customer.total_paid}
+                                                    {formatCurrencyPTBR(customer.total_paid)}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap py-4 pl-3 pr-6">

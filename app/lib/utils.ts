@@ -3,7 +3,7 @@ import { Revenue } from './definitions';
 export const formatCurrency = (
   amount: number | string,
   locale: string = 'en-US',
-  currency: string = 'USD',
+  currency: string = 'EUR',
   divideByHundred: boolean = true
 ): string => {
   let numValue: number;

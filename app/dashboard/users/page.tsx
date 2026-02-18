@@ -26,7 +26,7 @@ export default async function Page({
             <div className="flex items-center justify-between mb-8">
                 <div className="flex flex-col w-full justify-between">
                     <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-gray-900 dark:text-white">
-                        Utilizadores
+                        Usuários
                     </h1>
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center lg:text-start">
                         Gerencie os utilizadores do sistema

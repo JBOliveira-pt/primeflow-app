@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
-import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
+import { formatDateToLocal, formatCurrencyPTBR } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 
 export default async function InvoicesTable({
@@ -13,6 +13,12 @@ export default async function InvoicesTable({
     currentPage: number;
 }) {
     const invoices = await fetchFilteredInvoices(query, currentPage);
+
+    const getAmountColor = (status: string) => {
+        return status === "paid"
+            ? "text-green-600 dark:text-green-400"
+            : "text-yellow-600 dark:text-yellow-400";
+    };
 
     return (
         <div className="mt-6 flow-root">
@@ -47,8 +53,10 @@ export default async function InvoicesTable({
                                 </div>
                                 <div className="flex w-full items-center justify-between pt-4">
                                     <div>
-                                        <p className="text-lg font-bold text-gray-900 dark:text-white">
-                                            {formatCurrency(invoice.amount)}
+                                        <p
+                                            className={`text-lg font-medium ${getAmountColor(invoice.status)}`}
+                                        >
+                                            {formatCurrencyPTBR(invoice.amount)}
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {formatDateToLocal(invoice.date)}
@@ -147,8 +155,10 @@ export default async function InvoicesTable({
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
                                         {invoice.email}
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                                        {formatCurrency(invoice.amount)}
+                                    <td
+                                        className={`whitespace-nowrap px-3 py-4 text-sm font-medium ${getAmountColor(invoice.status)}`}
+                                    >
+                                        {formatCurrencyPTBR(invoice.amount)}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
                                         {formatDateToLocal(invoice.date)}

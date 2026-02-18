@@ -7,6 +7,7 @@ import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 import { fetchInvoicesPages } from "@/app/lib/data";
 import { Metadata } from "next";
+import { formatCurrencyPTBR } from "@/app/lib/utils";
 
 export const metadata: Metadata = {
     title: "Invoices | PrimeFlow Dashboard",

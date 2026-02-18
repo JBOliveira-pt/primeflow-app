@@ -10,6 +10,7 @@ import {
     CardsSkeleton,
 } from "@/app/ui/skeletons";
 import { getCurrentUser } from "@/app/lib/auth-helpers";
+import { revenue } from "@/app/lib/placeholder-data";
 
 // Forçar renderização dinâmica (requerida para Next.js Production)
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function Page() {
             {/* Gráficos */}
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
                 <Suspense fallback={<RevenueChartSkeleton />}>
-                    <RevenueChart />
+                    <RevenueChart revenue={revenue} />
                 </Suspense>
 
                 <Suspense fallback={<LatestInvoicesSkeleton />}>
