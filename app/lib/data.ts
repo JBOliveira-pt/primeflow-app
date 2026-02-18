@@ -102,17 +102,24 @@ export async function fetchRevenue() {
         const organizationId = await getOrganizationId();
 
         const data = await sql<Revenue[]>`
-        SELECT * FROM revenue
-        WHERE organization_id = ${organizationId}
-        ORDER BY month DESC LIMIT 12`;
+                SELECT
+                        TO_CHAR(DATE_TRUNC('month', date), 'Mon') AS month,
+                        COALESCE(SUM(amount), 0)::int AS revenue
+                FROM invoices
+                WHERE organization_id = ${organizationId}
+                    AND status = 'paid'
+                GROUP BY DATE_TRUNC('month', date)
+                ORDER BY DATE_TRUNC('month', date) DESC
+                LIMIT 12`;
 
         console.log("Data fetch completed after 3 seconds.");
         console.log("Revenue records found:", data.length);
-        console.log("First month:", data[0]?.month);
-        console.log("Last month:", data[data.length - 1]?.month);
+        const orderedData = data.slice().reverse();
 
+        console.log("First month:", orderedData[0]?.month);
+        console.log("Last month:", orderedData[orderedData.length - 1]?.month);
 
-        return data;
+        return orderedData;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch revenue data.");
@@ -150,7 +157,7 @@ export async function fetchLatestInvoices() {
             ...invoice,
             image_url: invoice.image_url || DEFAULT_AVATAR,
             date: formatDateToLocal(invoice.date),
-            amount: formatCurrency(invoice.amount),
+            amount: invoice.amount,
         }));
         return latestInvoices;
     } catch (error) {
@@ -198,7 +205,7 @@ export async function fetchCardData() {
         const totalPendingInvoices = formatCurrency(data[2][0].pending ?? "0");
         const numberOfPendingInvoices = Number(data[3][0].count ?? "0");
 
-         const calcPercent = (currentRaw: any, prevRaw: any) => {
+        const calcPercent = (currentRaw: any, prevRaw: any) => {
             const current = Number(currentRaw ?? 0);
             const prev = Number(prevRaw ?? 0);
             if (prev === 0) return current === 0 ? 0 : 100;
@@ -211,11 +218,13 @@ export async function fetchCardData() {
 
         const customersCurrent = Number(data[6][0].count ?? 0);
         const customersPrev = Number(data[7][0].count ?? 0);
-        const percentCustomersChange = calcPercent(customersCurrent, customersPrev);
-
+        const percentCustomersChange = calcPercent(
+            customersCurrent,
+            customersPrev,
+        );
 
         return {
-           numberOfCustomers,
+            numberOfCustomers,
             numberOfInvoices,
             totalPaidInvoices,
             totalPendingInvoices,
@@ -250,18 +259,18 @@ export async function fetchFilteredInvoices(
         invoices.amount,
         invoices.date,
         invoices.status,
-        customers.name,
-        customers.email,
+        COALESCE(customers.name, 'Cliente removido') AS name,
+        COALESCE(customers.email, '') AS email,
         customers.image_url,
         invoices.customer_id,
         invoices.created_by
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
+            FROM invoices
+            LEFT JOIN customers ON invoices.customer_id = customers.id
       WHERE
         invoices.organization_id = ${organizationId}
         AND (
-          customers.name ILIKE ${`%${query}%`} OR
-          customers.email ILIKE ${`%${query}%`} OR
+                    COALESCE(customers.name, '') ILIKE ${`%${query}%`} OR
+                    COALESCE(customers.email, '') ILIKE ${`%${query}%`} OR
           invoices.amount::text ILIKE ${`%${query}%`} OR
           invoices.date::text ILIKE ${`%${query}%`} OR
           invoices.status ILIKE ${`%${query}%`}
@@ -288,13 +297,13 @@ export async function fetchInvoicesPages(query: string) {
         const organizationId = await getOrganizationId();
 
         const data = await sql`SELECT COUNT(*)
-    FROM invoices
-    JOIN customers ON invoices.customer_id = customers.id
+        FROM invoices
+        LEFT JOIN customers ON invoices.customer_id = customers.id
     WHERE
       invoices.organization_id = ${organizationId}
       AND (
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
+                COALESCE(customers.name, '') ILIKE ${`%${query}%`} OR
+                COALESCE(customers.email, '') ILIKE ${`%${query}%`} OR
         invoices.amount::text ILIKE ${`%${query}%`} OR
         invoices.date::text ILIKE ${`%${query}%`} OR
         invoices.status ILIKE ${`%${query}%`}
@@ -390,8 +399,8 @@ export async function fetchFilteredCustomers(
                 image_url: customer.image_url || DEFAULT_AVATAR,
                 created_by: customer.created_by,
                 total_invoices: Number(customer.total_invoices),
-                total_pending: formatCurrency(customer.total_pending),
-                total_paid: formatCurrency(customer.total_paid),
+                total_pending: Number(customer.total_pending),
+                total_paid: Number(customer.total_paid),
             }),
         );
 

@@ -1,7 +1,18 @@
 // app/ui/dashboard/sidenav.tsx
 "use client";
 
-import { LogOut, User, Users, History, Home, Menu, X, BarChart3, FileText, CircleUserRound } from "lucide-react";
+import {
+    LogOut,
+    User,
+    Users,
+    History,
+    Home,
+    Menu,
+    X,
+    BarChart3,
+    FileText,
+    CircleUserRound,
+} from "lucide-react";
 import Link from "next/link";
 import AcmeLogo from "@/app/ui/acme-logo";
 import { SignOutButton, useUser } from "@clerk/nextjs";
@@ -131,7 +142,7 @@ export default function SideNav() {
                     <NavItem
                         href="/dashboard/users"
                         icon={<CircleUserRound size={20} />}
-                        label="Usuários"
+                        label="Utilizadores"
                         onClick={() => setIsOpen(false)}
                     />
                 </nav>

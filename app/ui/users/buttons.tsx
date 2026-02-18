@@ -34,7 +34,7 @@ export async function UpdateUser({ id }: { id: string }) {
         <Link
             href={`/dashboard/users/${id}/edit`}
             className="rounded-lg border border-gray-700 p-2 hover:bg-gray-800 hover:border-gray-600 transition-all group"
-            title="Editar usuário"
+            title="Editar utilizador"
         >
             <PencilIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
         </Link>

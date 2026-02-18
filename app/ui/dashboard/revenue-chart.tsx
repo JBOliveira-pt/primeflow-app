@@ -9,7 +9,9 @@ interface RevenueChartProps {
     revenue: Revenue[];
 }
 
-export default function RevenueChart({ revenue: allRevenue }: RevenueChartProps) {
+export default function RevenueChart({
+    revenue: allRevenue,
+}: RevenueChartProps) {
     const [selectedMonths, setSelectedMonths] = useState<3 | 5 | 12>(12);
     const [revenue, setRevenue] = useState<Revenue[]>([]);
 
@@ -76,7 +78,9 @@ export default function RevenueChart({ revenue: allRevenue }: RevenueChartProps)
                     {[3, 5, 12].map((months) => (
                         <button
                             key={months}
-                            onClick={() => setSelectedMonths(months as 3 | 5 | 12)}
+                            onClick={() =>
+                                setSelectedMonths(months as 3 | 5 | 12)
+                            }
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
                                 selectedMonths === months
                                     ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
@@ -152,20 +156,20 @@ export default function RevenueChart({ revenue: allRevenue }: RevenueChartProps)
                                                     : "bg-gradient-to-t from-gray-400 to-gray-300 dark:from-gray-700 dark:to-gray-600 hover:from-gray-500 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-500"
                                             }
                                         `}
-                                        style={{ height: `${barHeight}px` }}
+                                        style={{
+                                            height: `${barHeight}px`,
+                                            marginTop: "15px",
+                                        }}
                                     />
 
                                     {/* Label do mês */}
-                                    <p className="text-xs text-gray-600 dark:text-gray-500 -rotate-45 sm:rotate-0 mt-1">
+                                    <p className="text-xs text-gray-600 dark:text-gray-500 -rotate-45 sm:rotate-0">
                                         {month.month}
                                     </p>
                                 </div>
                             );
                         })}
                     </div>
-
-                    {/* Linha de base */}
-                    <div className="absolute bottom-6 left-8 right-0 h-px bg-gray-200 dark:bg-gray-800"></div>
                 </div>
 
                 {/* Footer */}

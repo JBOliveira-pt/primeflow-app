@@ -240,7 +240,7 @@ export async function createInvoice(
     }
 
     const { customerId, amount, status, date } = validatedFields.data;
-    const amountInCents = amount * 100;
+    const amountInCents = Math.round(amount);
     const formattedDate = date.toISOString().split("T")[0];
 
     try {
@@ -341,7 +341,7 @@ export async function updateInvoice(
     }
 
     const { customerId, amount, status, date } = validatedFields.data;
-    const amountInCents = amount * 100;
+    const amountInCents = Math.round(amount);
     const formattedDate = date.toISOString().split("T")[0];
 
     try {

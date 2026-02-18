@@ -16,7 +16,7 @@ function SubmitButton() {
             type="submit"
             disabled={pending}
             className="rounded-lg border border-gray-700 p-2 hover:bg-red-500/10 hover:border-red-500/50 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Deletar usuário"
+            title="Deletar utilizador"
         >
             <span className="sr-only">Delete</span>
             <TrashIcon className="w-5 h-5 text-gray-400 group-hover:text-red-400 transition-colors" />
@@ -45,7 +45,7 @@ export function DeleteUserButton({
             setShowModal(true);
         } else {
             // Regular user deletion
-            if (!confirm("Tem certeza que deseja deletar este usuário?")) {
+            if (!confirm("Tem certeza que deseja deletar este utilizador?")) {
                 return;
             }
             setIsDeleting(true);
@@ -53,7 +53,7 @@ export function DeleteUserButton({
                 await deleteAction(id);
             } catch (error) {
                 console.error(error);
-                alert("Erro ao deletar usuário");
+                alert("Erro ao deletar utilizador");
             } finally {
                 setIsDeleting(false);
             }
@@ -115,7 +115,7 @@ export function DeleteUserButton({
                                 <li>Remover todos os dados da organização</li>
                                 <li>
                                     Excluir todos os clientes, faturas e
-                                    usuários associados
+                                    utilizadores associados
                                 </li>
                             </ul>
                         </div>

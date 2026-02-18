@@ -26,7 +26,7 @@ export default async function Page({
             <div className="flex items-center justify-between mb-8">
                 <div className="flex flex-col w-full justify-between">
                     <h1 className="text-xl text-center lg:text-start md:text-3xl font-bold text-gray-900 dark:text-white">
-                        Usuários
+                        Utilizadores
                     </h1>
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center lg:text-start">
                         Gerencie os utilizadores do sistema
@@ -37,7 +37,7 @@ export default async function Page({
             {/* Search and Add - Envolver Search em Suspense */}
             <div className="flex items-center justify-between gap-4 mb-6">
                 <Suspense fallback={<SearchSkeleton />}>
-                    <Search placeholder="Buscar usuários..." />
+                    <Search placeholder="Buscar utilizadores..." />
                 </Suspense>
                 <AddUserButton />
             </div>

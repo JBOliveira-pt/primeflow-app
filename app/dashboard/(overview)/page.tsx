@@ -10,7 +10,7 @@ import {
     CardsSkeleton,
 } from "@/app/ui/skeletons";
 import { getCurrentUser } from "@/app/lib/auth-helpers";
-import { revenue } from "@/app/lib/placeholder-data";
+import { fetchRevenue } from "@/app/lib/data";
 
 // Forçar renderização dinâmica (requerida para Next.js Production)
 export const dynamic = "force-dynamic";
@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function Page() {
     const user = await getCurrentUser();
     const userName = user?.name || user?.email?.split("@")[0] || "Usuário";
+    const revenue = await fetchRevenue();
 
     return (
         <div className="bg-gray-50 dark:bg-gray-950 w-full min-h-screen p-6">

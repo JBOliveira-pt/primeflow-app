@@ -22,14 +22,25 @@ function SubmitButton() {
 export function DeleteCustomerButton({
     id,
     deleteAction,
+    invoiceCount,
 }: {
     id: string;
     deleteAction: (id: string) => Promise<void>;
+    invoiceCount?: number;
 }) {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (!confirm("Tem certeza que deseja deletar este cliente?")) {
+        const count = invoiceCount ?? 0;
+        const invoiceWarning =
+            count === 0
+                ? "Nao ha faturas associadas, mas a acao e definitiva."
+                : count === 1
+                  ? "1 fatura associada tambem sera deletada."
+                  : `${count} faturas associadas tambem serao deletadas.`;
+        const message = `Tem certeza que deseja deletar este cliente?\n${invoiceWarning}`;
+
+        if (!confirm(message)) {
             return;
         }
 

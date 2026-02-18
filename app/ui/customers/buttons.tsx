@@ -49,9 +49,11 @@ export async function UpdateCustomer({
 export async function DeleteCustomer({
     id,
     createdBy,
+    invoiceCount,
 }: {
     id: string;
     createdBy: string | null | undefined;
+    invoiceCount?: number;
 }) {
     const isAdmin = await isUserAdmin();
     const currentUser = await getCurrentUser();
@@ -63,5 +65,11 @@ export async function DeleteCustomer({
         return null;
     }
 
-    return <DeleteCustomerButton id={id} deleteAction={deleteCustomer} />;
+    return (
+        <DeleteCustomerButton
+            id={id}
+            deleteAction={deleteCustomer}
+            invoiceCount={invoiceCount}
+        />
+    );
 }

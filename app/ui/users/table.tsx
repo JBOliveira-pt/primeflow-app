@@ -48,7 +48,7 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                             >
                                                 {user.role === "admin"
                                                     ? "Admin"
-                                                    : "Usuário"}
+                                                    : "Utilizador"}
                                             </span>
                                         </div>
                                         {isAdmin && (
@@ -67,7 +67,7 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                             <UserIcon className="w-6 h-6 text-gray-500" />
                                         </div>
                                         <p className="text-gray-500 text-sm">
-                                            Nenhum usuário encontrado
+                                            Nenhum utilizador encontrado
                                         </p>
                                     </div>
                                 )}
@@ -81,7 +81,7 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                             scope="col"
                                             className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
                                         >
-                                            Usuário
+                                            Utilizador
                                         </th>
                                         <th
                                             scope="col"
@@ -146,7 +146,7 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                                     ) : (
                                                         <>
                                                             <UserIcon className="w-3.5 h-3.5" />
-                                                            Usuário
+                                                            Utilizador
                                                         </>
                                                     )}
                                                 </span>
@@ -175,10 +175,10 @@ export default async function UsersTable({ users }: { users: User[] }) {
                                         <UserIcon className="w-6 h-6 text-gray-500" />
                                     </div>
                                     <p className="text-gray-500 text-sm">
-                                        Nenhum usuário encontrado
+                                        Nenhum utilizador encontrado
                                     </p>
                                     <p className="text-gray-400 dark:text-gray-600 text-xs mt-1">
-                                        Adicione um novo usuário para começar
+                                        Adicione um novo utilizador para começar
                                     </p>
                                 </div>
                             )}

@@ -8,10 +8,9 @@ export async function GET() {
         const { userId } = await auth();
 
         if (!userId) {
-            return new Response(
-                JSON.stringify({ error: "Unauthorized" }),
-                { status: 401 }
-            );
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+                status: 401,
+            });
         }
 
         // Get organization_id
@@ -22,7 +21,7 @@ export async function GET() {
         if (!user || !user[0]?.organization_id) {
             return new Response(
                 JSON.stringify({ error: "Organization not found" }),
-                { status: 404 }
+                { status: 404 },
             );
         }
 
@@ -48,7 +47,7 @@ export async function GET() {
         const formatted = pendingInvoices.map((inv: any) => ({
             id: inv.id,
             customer_name: inv.customer_name,
-            amount: inv.amount / 100, // Convert from cents
+            amount: inv.amount,
             date: inv.date,
             status: inv.status,
         }));
@@ -61,7 +60,7 @@ export async function GET() {
         console.error("API Error:", error);
         return new Response(
             JSON.stringify({ error: "Failed to fetch invoices" }),
-            { status: 500 }
+            { status: 500 },
         );
     }
 }
