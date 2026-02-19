@@ -6,7 +6,7 @@ import { ReactNode, useState } from "react";
 import { Avatar } from "@/app/components/avatar";
 import { Button } from "@/app/components/button";
 import { useTheme } from "@/app/components/theme-provider";
-import { NotificationDropdown } from "@/app/components/NotificationDropdown";
+import { NotificationDropdown } from "@/app/components/notification-dropdown";
 
 interface DashboardHeaderProps {
     mobileMenuTrigger?: ReactNode;

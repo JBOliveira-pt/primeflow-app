@@ -1,4 +1,4 @@
-import AcmeLogo from "@/app/ui/acme-logo";
+import AcmeLogo from "@/app/ui/primeflow-logo";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { lusitana } from "@/app/ui/fonts";
@@ -37,7 +37,6 @@ export default function Page() {
                     </Link>
                 </div>
                 <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
-                    
                     {/* Hero Images from Cloudflare R2 - Desktop */}
                     {/* Light mode - Desktop */}
                     <Image
@@ -48,7 +47,7 @@ export default function Page() {
                         alt="Screenshots of the dashboard project showing desktop version"
                         priority
                     />
-                    
+
                     {/* Dark mode - Desktop */}
                     <Image
                         src={`${R2_IMAGES_URL}/primeflow-ecrans-dark.png`}

@@ -14,11 +14,11 @@ import {
     CircleUserRound,
 } from "lucide-react";
 import Link from "next/link";
-import AcmeLogo from "@/app/ui/acme-logo";
+import AcmeLogo from "@/app/ui/primeflow-logo";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { DashboardHeader } from "@/app/components/Header";
+import { DashboardHeader } from "@/app/components/header";
 
 export default function SideNav() {
     const [isOpen, setIsOpen] = useState(false);
