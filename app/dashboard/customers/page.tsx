@@ -3,7 +3,7 @@ import Pagination from "@/app/ui/invoices/pagination";
 import Search from "@/app/ui/search";
 import CustomersTable from "@/app/ui/customers/table";
 import { Suspense } from "react";
-import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
+import { CustomersTableSkeleton } from "@/app/ui/skeletons";
 import { Metadata } from "next";
 import { fetchFilteredCustomers } from "@/app/lib/data";
 import { AddCustomerButton } from "@/app/ui/customers/buttons";
@@ -77,7 +77,7 @@ export default async function Page(props: {
 
             <Suspense
                 key={query + currentPage}
-                fallback={<InvoicesTableSkeleton />}
+                fallback={<CustomersTableSkeleton />}
             >
                 <CustomersTable customers={paginatedCustomers} />
             </Suspense>

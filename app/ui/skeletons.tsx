@@ -189,33 +189,33 @@ export function InvoicesTableSkeleton() {
                             <tr>
                                 <th
                                     scope="col"
-                                    className="px-4 py-5 font-medium text-gray-600 dark:text-gray-400 sm:pl-6"
+                                    className="px-4 py-5 text-xs font-medium text-gray-600 dark:text-gray-400 sm:pl-6"
                                 >
-                                    Customer
+                                    CLIENTE
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium text-gray-600 dark:text-gray-400"
+                                    className="px-3 py-5 text-xs font-medium text-gray-600 dark:text-gray-400"
                                 >
-                                    Email
+                                    EMAIL
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium text-gray-600 dark:text-gray-400"
+                                    className="px-3 py-5 text-xs font-medium text-gray-600 dark:text-gray-400"
                                 >
-                                    Amount
+                                    VALOR
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium text-gray-600 dark:text-gray-400"
+                                    className="px-3 py-5 text-xs font-medium text-gray-600 dark:text-gray-400"
                                 >
-                                    Date
+                                    DATA
                                 </th>
                                 <th
                                     scope="col"
-                                    className="px-3 py-5 font-medium text-gray-600 dark:text-gray-400"
+                                    className="px-3 py-5 text-xs font-medium text-gray-600 dark:text-gray-400"
                                 >
-                                    Status
+                                    STATUS
                                 </th>
                                 <th
                                     scope="col"
@@ -243,22 +243,20 @@ export function InvoicesTableSkeleton() {
 // Skeleton específico para mobile users
 export function UsersMobileSkeleton() {
     return (
-        <div className="mb-2 w-full rounded-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+        <div className="w-full border-b border-gray-200 dark:border-gray-800 p-4 last:border-b-0">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-800"></div>
                     <div>
-                        <div className="h-5 w-32 rounded bg-gray-200 dark:bg-gray-800 mb-2"></div>
-                        <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-800"></div>
+                        <div className="h-5 w-28 rounded bg-gray-200 dark:bg-gray-800 mb-2"></div>
+                        <div className="h-3 w-32 rounded bg-gray-200 dark:bg-gray-800"></div>
                     </div>
                 </div>
+                <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div>
             </div>
-            <div className="flex w-full items-center justify-between pt-4">
-                <div className="h-6 w-16 rounded-full bg-gray-200 dark:bg-gray-800"></div>
-                <div className="flex justify-end gap-2">
-                    <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
-                    <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
-                </div>
+            <div className="pt-4 flex justify-end gap-2">
+                <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
+                <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
             </div>
         </div>
     );
@@ -267,24 +265,25 @@ export function UsersMobileSkeleton() {
 // Skeleton específico para linha de users
 export function UsersTableRowSkeleton() {
     return (
-        <tr className="w-full border-b border-gray-200 dark:border-gray-800 last-of-type:border-none">
+        <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
             {/* User Name and Image */}
-            <td className="relative overflow-hidden whitespace-nowrap py-4 pl-6 pr-3">
+            <td className="whitespace-nowrap py-4 pl-6 pr-3">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-800"></div>
-                    <div>
-                        <div className="h-5 w-32 rounded bg-gray-200 dark:bg-gray-800 mb-2"></div>
-                        <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-800"></div>
-                    </div>
+                    <div className="h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-800"></div>
                 </div>
+            </td>
+            {/* Email */}
+            <td className="whitespace-nowrap px-3 py-4">
+                <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-800"></div>
             </td>
             {/* Role */}
             <td className="whitespace-nowrap px-3 py-4">
-                <div className="h-6 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                <div className="h-7 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div>
             </td>
             {/* Actions */}
-            <td className="whitespace-nowrap py-4 pl-6 pr-3">
-                <div className="flex justify-end gap-3">
+            <td className="whitespace-nowrap py-4 pl-3 pr-6">
+                <div className="flex justify-end gap-2">
                     <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
                     <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
                 </div>
@@ -296,49 +295,223 @@ export function UsersTableRowSkeleton() {
 // Skeleton específico para tabela de users
 export function UsersTableSkeleton() {
     return (
-        <div className="mt-6 flow-root">
-            <div className="inline-block min-w-full align-middle">
-                <div className="rounded-lg bg-gray-50 dark:bg-gray-950 p-2 md:pt-0">
-                    <div className="md:hidden">
-                        <UsersMobileSkeleton />
-                        <UsersMobileSkeleton />
-                        <UsersMobileSkeleton />
-                        <UsersMobileSkeleton />
-                        <UsersMobileSkeleton />
-                        <UsersMobileSkeleton />
+        <div className="w-full">
+            <div className="mt-6 flow-root">
+                <div className="overflow-x-auto">
+                    <div className="inline-block min-w-full align-middle">
+                        <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                            {/* Mobile View */}
+                            <div className="md:hidden">
+                                <UsersMobileSkeleton />
+                                <UsersMobileSkeleton />
+                                <UsersMobileSkeleton />
+                                <UsersMobileSkeleton />
+                                <UsersMobileSkeleton />
+                                <UsersMobileSkeleton />
+                            </div>
+
+                            {/* Desktop View */}
+                            <table className="hidden min-w-full md:table">
+                                <thead className="bg-gray-50 dark:bg-gray-800/50">
+                                    <tr>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Utilizador
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Email
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Função
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="relative py-4 pl-3 pr-6"
+                                        >
+                                            <span className="sr-only">
+                                                Ações
+                                            </span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                    <UsersTableRowSkeleton />
+                                    <UsersTableRowSkeleton />
+                                    <UsersTableRowSkeleton />
+                                    <UsersTableRowSkeleton />
+                                    <UsersTableRowSkeleton />
+                                    <UsersTableRowSkeleton />
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <table className="hidden min-w-full text-gray-900 dark:text-gray-100 md:table">
-                        <thead className="rounded-lg text-left text-sm font-normal">
-                            <tr>
-                                <th
-                                    scope="col"
-                                    className="px-4 py-5 font-medium text-gray-600 dark:text-gray-400 sm:pl-6"
-                                >
-                                    Utilizador
-                                </th>
-                                <th
-                                    scope="col"
-                                    className="px-3 py-5 font-medium text-gray-600 dark:text-gray-400"
-                                >
-                                    Role
-                                </th>
-                                <th
-                                    scope="col"
-                                    className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6"
-                                >
-                                    <span className="sr-only">Ações</span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-gray-900">
-                            <UsersTableRowSkeleton />
-                            <UsersTableRowSkeleton />
-                            <UsersTableRowSkeleton />
-                            <UsersTableRowSkeleton />
-                            <UsersTableRowSkeleton />
-                            <UsersTableRowSkeleton />
-                        </tbody>
-                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ============= CUSTOMERS SKELETONS =============
+
+// Skeleton específico para mobile customers
+export function CustomersMobileSkeleton() {
+    return (
+        <div className="w-full border-b border-gray-200 dark:border-gray-800 p-4 last:border-b-0">
+            {/* Customer Info */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                    <div>
+                        <div className="h-5 w-28 rounded bg-gray-200 dark:bg-gray-800 mb-2"></div>
+                        <div className="h-3 w-32 rounded bg-gray-200 dark:bg-gray-800"></div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex w-full items-center justify-between py-4 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col">
+                    <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-800 mb-1"></div>
+                    <div className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+                <div className="flex flex-col">
+                    <div className="h-3 w-12 rounded bg-gray-200 dark:bg-gray-800 mb-1"></div>
+                    <div className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+                <div className="flex flex-col">
+                    <div className="h-3 w-14 rounded bg-gray-200 dark:bg-gray-800 mb-1"></div>
+                    <div className="h-5 w-8 rounded bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-4 flex justify-end gap-2">
+                <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
+                <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
+            </div>
+        </div>
+    );
+}
+
+// Skeleton específico para linha de customers
+export function CustomersTableRowSkeleton() {
+    return (
+        <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
+            {/* Customer Name and Image */}
+            <td className="whitespace-nowrap py-4 pl-6 pr-3">
+                <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                    <div className="h-4 w-32 rounded bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+            </td>
+            {/* Email */}
+            <td className="whitespace-nowrap px-3 py-4">
+                <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-800"></div>
+            </td>
+            {/* Faturas */}
+            <td className="whitespace-nowrap px-3 py-4">
+                <div className="h-6 w-8 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+            </td>
+            {/* Pendente */}
+            <td className="whitespace-nowrap px-3 py-4">
+                <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-800"></div>
+            </td>
+            {/* Pago */}
+            <td className="whitespace-nowrap px-3 py-4">
+                <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-800"></div>
+            </td>
+            {/* Actions */}
+            <td className="whitespace-nowrap py-4 pl-3 pr-6">
+                <div className="flex justify-end gap-2">
+                    <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
+                    <div className="h-9 w-9 rounded bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+            </td>
+        </tr>
+    );
+}
+
+// Skeleton específico para tabela de customers
+export function CustomersTableSkeleton() {
+    return (
+        <div className="w-full">
+            <div className="mt-6 flow-root">
+                <div className="overflow-x-auto">
+                    <div className="inline-block min-w-full align-middle">
+                        <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                            {/* Mobile View */}
+                            <div className="md:hidden">
+                                <CustomersMobileSkeleton />
+                                <CustomersMobileSkeleton />
+                                <CustomersMobileSkeleton />
+                                <CustomersMobileSkeleton />
+                                <CustomersMobileSkeleton />
+                                <CustomersMobileSkeleton />
+                            </div>
+
+                            {/* Desktop View */}
+                            <table className="hidden min-w-full md:table">
+                                <thead className="bg-gray-50 dark:bg-gray-800/50">
+                                    <tr>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Cliente
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Email
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Faturas
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Pendente
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Pago
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="relative py-4 pl-3 pr-6"
+                                        >
+                                            <span className="sr-only">
+                                                Ações
+                                            </span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                    <CustomersTableRowSkeleton />
+                                    <CustomersTableRowSkeleton />
+                                    <CustomersTableRowSkeleton />
+                                    <CustomersTableRowSkeleton />
+                                    <CustomersTableRowSkeleton />
+                                    <CustomersTableRowSkeleton />
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
