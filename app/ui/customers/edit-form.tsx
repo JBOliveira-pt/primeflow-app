@@ -13,6 +13,8 @@ import {
     XMarkIcon,
     PencilIcon,
     ArrowPathIcon,
+    IdentificationIcon,
+    HomeModernIcon,
 } from "@heroicons/react/24/outline";
 
 const initialState: CustomerState = { message: null, errors: {} };
@@ -181,6 +183,77 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
                                 {error}
                             </p>
                         ))}
+                    </div>
+                </div>
+
+                {/* NIF and Endereço Fiscal */}
+                <div className="grid gap-6 md:grid-cols-2 mb-6">
+                    {/* NIF */}
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="nif"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            NIF
+                        </label>
+                        <div className="relative">
+                            <input
+                                id="nif"
+                                name="nif"
+                                type="text"
+                                maxLength={9}
+                                defaultValue={customer.nif || ''}
+                                className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                placeholder="123456789"
+                                aria-describedby="nif-error"
+                            />
+                            <IdentificationIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-purple-400 transition-colors" />
+                        </div>
+                        <div
+                            id="nif-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
+                            {state.errors?.nif?.map((error) => (
+                                <p key={error} className="text-sm text-red-400">
+                                    {error}
+                                </p>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Endereço Fiscal */}
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="endereco_fiscal"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            Endereço Fiscal
+                        </label>
+                        <div className="relative">
+                            <input
+                                id="endereco_fiscal"
+                                name="endereco_fiscal"
+                                type="text"
+                                maxLength={255}
+                                defaultValue={customer.endereco_fiscal || ''}
+                                className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                                placeholder="Rua exemplo, 123, 1000-001 Lisboa"
+                                aria-describedby="endereco_fiscal-error"
+                            />
+                            <HomeModernIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-purple-400 transition-colors" />
+                        </div>
+                        <div
+                            id="endereco_fiscal-error"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
+                            {state.errors?.endereco_fiscal?.map((error) => (
+                                <p key={error} className="text-sm text-red-400">
+                                    {error}
+                                </p>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

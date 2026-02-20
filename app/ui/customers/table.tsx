@@ -43,6 +43,11 @@ export default async function CustomersTable({
                                                     <p className="text-xs text-gray-500">
                                                         {customer.email}
                                                     </p>
+                                                    {customer.nif && (
+                                                        <p className="text-xs text-gray-400 mt-0.5">
+                                                            NIF: {customer.nif}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -129,6 +134,12 @@ export default async function CustomersTable({
                                             scope="col"
                                             className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
                                         >
+                                            NIF
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                        >
                                             Faturas
                                         </th>
                                         <th
@@ -183,6 +194,9 @@ export default async function CustomersTable({
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
                                                 {customer.email}
+                                            </td>
+                                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                                {customer.nif || '-'}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-4">
                                                 <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">

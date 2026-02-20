@@ -23,6 +23,7 @@ export function NotificationDropdown({
 }: NotificationDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
+    const [totalPending, setTotalPending] = useState(0);
     const [loading, setLoading] = useState(false);
     const [positionAbove, setPositionAbove] = useState(false);
     const router = useRouter();
@@ -33,7 +34,8 @@ export function NotificationDropdown({
         try {
             const response = await fetch("/api/invoices/pending");
             const data = await response.json();
-            setPendingInvoices(data.slice(0, 5)); // Últimas 5 faturas pendentes
+            setPendingInvoices(data.invoices || []);
+            setTotalPending(data.total || 0);
         } catch (error) {
             console.error("Failed to fetch pending invoices:", error);
         } finally {
@@ -85,7 +87,7 @@ export function NotificationDropdown({
         router.push("/dashboard/invoices");
     };
 
-    const showBadge = !loading && pendingInvoices.length > 0;
+    const showBadge = !loading && totalPending > 0;
 
     return (
         <div className="relative" ref={containerRef}>
@@ -113,9 +115,8 @@ export function NotificationDropdown({
                             Faturas Pendentes
                         </h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {pendingInvoices.length} fatura
-                            {pendingInvoices.length !== 1 ? "s" : ""} aguardando
-                            pagamento
+                            {totalPending} fatura
+                            {totalPending !== 1 ? "s" : ""} aguardando pagamento
                         </p>
                     </div>
 
@@ -175,7 +176,7 @@ export function NotificationDropdown({
                                 className="w-full text-xs cursor-pointer"
                                 onClick={handleViewAllInvoices}
                             >
-                                Ver todas as faturas
+                                Ver todas as faturas pendentes
                             </Button>
                         </div>
                     )}

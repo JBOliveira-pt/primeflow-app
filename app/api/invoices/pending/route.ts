@@ -27,7 +27,15 @@ export async function GET() {
 
         const organizationId = user[0].organization_id;
 
-        // Fetch pending invoices with customer info
+        // Get total count of pending invoices
+        const totalCount = await sql`
+            SELECT COUNT(*) as total
+            FROM invoices
+            WHERE organization_id = ${organizationId}
+            AND status = 'pending'
+        `;
+
+        // Fetch pending invoices with customer info (limit to 5 for dropdown)
         const pendingInvoices = await sql`
             SELECT 
                 invoices.id,
@@ -40,7 +48,7 @@ export async function GET() {
             WHERE invoices.organization_id = ${organizationId}
             AND invoices.status = 'pending'
             ORDER BY invoices.date DESC
-            LIMIT 10
+            LIMIT 5
         `;
 
         // Format response
@@ -52,10 +60,16 @@ export async function GET() {
             status: inv.status,
         }));
 
-        return new Response(JSON.stringify(formatted), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
+        return new Response(
+            JSON.stringify({
+                invoices: formatted,
+                total: Number(totalCount[0].total),
+            }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
     } catch (error) {
         console.error("API Error:", error);
         return new Response(

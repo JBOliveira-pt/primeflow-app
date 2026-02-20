@@ -77,6 +77,15 @@ const CustomerFormSchema = z.object({
         .trim()
         .min(1, { message: "Please enter a last name." }),
     email: z.string().email({ message: "Please enter a valid email." }),
+    nif: z
+        .string()
+        .trim()
+        .regex(/^\d{9}$/, { message: "NIF deve ter exatamente 9 dígitos numéricos." }),
+    endereco_fiscal: z
+        .string()
+        .trim()
+        .min(1, { message: "Por favor, insira o endereço fiscal." })
+        .max(255, { message: "Endereço fiscal não pode exceder 255 caracteres." }),
 });
 
 const CreateCustomer = CustomerFormSchema;
@@ -87,6 +96,8 @@ export type CustomerState = {
         firstName?: string[];
         lastName?: string[];
         email?: string[];
+        nif?: string[];
+        endereco_fiscal?: string[];
         imageFile?: string[];
     };
     message: string | null;
@@ -464,6 +475,8 @@ export async function createCustomer(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
+        nif: formData.get("nif"),
+        endereco_fiscal: formData.get("endereco_fiscal"),
     });
 
     if (!validatedFields.success) {
@@ -481,14 +494,14 @@ export async function createCustomer(
         };
     }
 
-    const { firstName, lastName, email } = validatedFields.data;
+    const { firstName, lastName, email, nif, endereco_fiscal } = validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     let customerId: string;
     try {
         const result = await sql`
-            INSERT INTO customers (id, name, email, organization_id, created_by)
-            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${organizationId}, ${creatorId})
+            INSERT INTO customers (id, name, email, nif, endereco_fiscal, organization_id, created_by)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${nif}, ${endereco_fiscal}, ${organizationId}, ${creatorId})
             RETURNING id
         `;
         customerId = result[0].id;
@@ -586,6 +599,8 @@ export async function updateCustomer(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
+        nif: formData.get("nif"),
+        endereco_fiscal: formData.get("endereco_fiscal"),
     });
 
     if (!validatedFields.success) {
@@ -603,13 +618,13 @@ export async function updateCustomer(
         };
     }
 
-    const { firstName, lastName, email } = validatedFields.data;
+    const { firstName, lastName, email, nif, endereco_fiscal } = validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
         await sql`
             UPDATE customers
-            SET name = ${fullName}, email = ${email}
+            SET name = ${fullName}, email = ${email}, nif = ${nif}, endereco_fiscal = ${endereco_fiscal}
             WHERE id = ${id}
         `;
     } catch (error) {

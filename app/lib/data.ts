@@ -98,7 +98,7 @@ const DEFAULT_AVATAR = "https://avatar.vercel.sh/placeholder.png";
 export async function fetchRevenue() {
     try {
         console.log("Fetching revenue data...");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         const organizationId = await getOrganizationId();
 
         const data = await sql<Revenue[]>`
@@ -127,7 +127,7 @@ export async function fetchRevenue() {
 }
 
 export async function fetchLatestInvoices() {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     try {
         const organizationId = await getOrganizationId();
 
@@ -170,10 +170,6 @@ export async function fetchCardData() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     try {
         const organizationId = await getOrganizationId();
-
-        // You can probably combine these into a single SQL query
-        // However, we are intentionally splitting them to demonstrate
-        // how to initialize multiple queries in parallel with JS.
         const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices WHERE organization_id = ${organizationId}`;
         const customerCountPromise = sql`SELECT COUNT(*) FROM customers WHERE organization_id = ${organizationId}`;
         const invoiceStatusPromise = sql`SELECT
@@ -222,6 +218,7 @@ export async function fetchCardData() {
             customersCurrent,
             customersPrev,
         );
+        const customersChange = customersCurrent - customersPrev;
 
         return {
             numberOfCustomers,
@@ -231,6 +228,7 @@ export async function fetchCardData() {
             numberOfPendingInvoices,
             percentPaidChange,
             percentCustomersChange,
+            customersChange,
         };
     } catch (error) {
         console.error("Database Error:", error);
@@ -379,6 +377,8 @@ export async function fetchFilteredCustomers(
               customers.name,
               customers.email,
               customers.image_url,
+              customers.nif,
+              customers.endereco_fiscal,
               customers.created_by,
               COUNT(invoices.id) AS total_invoices,
               COALESCE(SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END), 0) AS total_pending,
@@ -388,7 +388,7 @@ export async function fetchFilteredCustomers(
             WHERE 
               customers.organization_id = ${organizationId}
               AND (customers.name ILIKE ${`%${query}%`} OR customers.email ILIKE ${`%${query}%`})
-            GROUP BY customers.id, customers.name, customers.email, customers.image_url, customers.created_by
+            GROUP BY customers.id, customers.name, customers.email, customers.image_url, customers.nif, customers.endereco_fiscal, customers.created_by
             ORDER BY customers.name ASC
         `;
         const formattedCustomers: FormattedCustomersTable[] = data.map(
@@ -397,6 +397,8 @@ export async function fetchFilteredCustomers(
                 name: customer.name,
                 email: customer.email,
                 image_url: customer.image_url || DEFAULT_AVATAR,
+                nif: customer.nif,
+                endereco_fiscal: customer.endereco_fiscal,
                 created_by: customer.created_by,
                 total_invoices: Number(customer.total_invoices),
                 total_pending: Number(customer.total_pending),
@@ -416,7 +418,7 @@ export async function fetchCustomerById(id: string) {
         const organizationId = await getOrganizationId();
 
         const data = await sql<Customer[]>`
-      SELECT id, name, email, image_url, created_by
+      SELECT id, name, email, image_url, nif, endereco_fiscal, created_by
       FROM customers
       WHERE id = ${id} AND organization_id = ${organizationId}
     `;

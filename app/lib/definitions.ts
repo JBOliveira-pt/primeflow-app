@@ -31,6 +31,8 @@ export type Customer = {
     name: string;
     email: string;
     image_url: string;
+    nif?: string;
+    endereco_fiscal?: string;
     organization_id?: string;
     created_by?: string;
 };
@@ -45,6 +47,8 @@ export type CustomersTableType = {
     name: string;
     email: string;
     image_url: string;
+    nif: string | null;
+    endereco_fiscal: string | null;
     created_by: string | null;
     total_invoices: number;
     total_pending: number;
@@ -56,6 +60,8 @@ export type FormattedCustomersTable = {
     name: string;
     email: string;
     image_url: string;
+    nif: string | null;
+    endereco_fiscal: string | null;
     created_by: string | null;
     total_invoices: number;
     total_pending: number;

@@ -40,6 +40,7 @@ export default async function CardWrapper() {
         numberOfPendingInvoices,
         percentPaidChange,
         percentCustomersChange,
+        customersChange,
     } = await fetchCardData();
 
     return (
@@ -61,7 +62,11 @@ export default async function CardWrapper() {
 
                     <div className="flex items-center gap-1 mt-2">
                         <TrendingUp className="text-green-500 w-3 h-3" />
-                        <span className="text-xs text-green-500">{percentPaidChange > 0 ? `+${percentPaidChange.toFixed(2)}%` : `${percentPaidChange.toFixed(2)}%`}</span>
+                        <span className="text-xs text-green-500">
+                            {percentPaidChange > 0
+                                ? `+${percentPaidChange.toFixed(2)}%`
+                                : `${percentPaidChange.toFixed(2)}%`}
+                        </span>
                     </div>
                 </CardContent>
             </Card>
@@ -80,7 +85,11 @@ export default async function CardWrapper() {
                     </div>
                     <div className="flex items-center gap-1 mt-2">
                         <span className="text-xs text-yellow-500">
-                            {numberOfPendingInvoices === 0 ? "Nenhuma fatura pendente" : `${numberOfPendingInvoices} fatura(s) pendente(s)`}
+                            {numberOfPendingInvoices === 0
+                                ? "Nenhuma fatura pendente"
+                                : numberOfPendingInvoices === 1
+                                  ? "1 fatura pendente"
+                                  : `${numberOfPendingInvoices} faturas pendentes`}
                         </span>
                     </div>
                 </CardContent>
@@ -121,9 +130,21 @@ export default async function CardWrapper() {
                         {numberOfCustomers}
                     </div>
                     <div className="flex items-center gap-1 mt-2">
-                        <TrendingUp className="text-purple-500 dark:text-purple-400 w-3 h-3" />
+                        {customersChange > 0 ? (
+                            <TrendingUp className="text-purple-500 dark:text-purple-400 w-3 h-3" />
+                        ) : customersChange < 0 ? (
+                            <TrendingDown className="text-purple-500 dark:text-purple-400 w-3 h-3" />
+                        ) : null}
                         <span className="text-xs text-purple-500 dark:text-purple-400">
-                            {percentCustomersChange > 0 ? `+ ${percentCustomersChange.toFixed(2)}%` : `${percentCustomersChange.toFixed(2)}%`} no último mês
+                            {customersChange > 0
+                                ? `+${customersChange}`
+                                : customersChange < 0
+                                  ? customersChange
+                                  : "0"}{" "}
+                            {Math.abs(customersChange) === 1
+                                ? "cliente"
+                                : "clientes"}{" "}
+                            no último mês
                         </span>
                     </div>
                 </CardContent>
