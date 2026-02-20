@@ -82,3 +82,24 @@ export async function getSignedImageUrl(
 
     return await getSignedUrl(r2Client, command, { expiresIn });
 }
+
+export async function uploadReceiptPdfToR2(
+    buffer: Buffer,
+    receiptId: string,
+    receiptNumber: number,
+): Promise<string> {
+    const safeNumber = String(receiptNumber).padStart(8, "0");
+    const key = `receipts/${receiptId}/recibo-${safeNumber}.pdf`;
+
+    const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: "application/pdf",
+        CacheControl: "private, max-age=0, must-revalidate",
+    });
+
+    await r2Client.send(command);
+
+    return `${R2_PUBLIC_URL}/${key}`;
+}

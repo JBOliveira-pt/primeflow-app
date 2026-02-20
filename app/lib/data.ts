@@ -102,15 +102,16 @@ export async function fetchRevenue() {
         const organizationId = await getOrganizationId();
 
         const data = await sql<Revenue[]>`
-                SELECT
-                        TO_CHAR(DATE_TRUNC('month', date), 'Mon') AS month,
-                        COALESCE(SUM(amount), 0)::int AS revenue
-                FROM invoices
-                WHERE organization_id = ${organizationId}
-                    AND status = 'paid'
-                GROUP BY DATE_TRUNC('month', date)
-                ORDER BY DATE_TRUNC('month', date) DESC
-                LIMIT 12`;
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', payment_date), 'Mon') AS month,
+                COALESCE(SUM(amount), 0)::int AS revenue
+            FROM invoices
+            WHERE organization_id = ${organizationId}
+                AND status = 'paid'
+                AND payment_date IS NOT NULL
+            GROUP BY DATE_TRUNC('month', payment_date)
+            ORDER BY DATE_TRUNC('month', payment_date) DESC
+            LIMIT 12`;
 
         console.log("Data fetch completed after 3 seconds.");
         console.log("Revenue records found:", data.length);
@@ -141,6 +142,7 @@ export async function fetchLatestInvoices() {
             SELECT 
                 invoices.amount, 
                 invoices.date,
+                invoices.payment_date,
                 invoices.status,
                 customers.name, 
                 customers.id as customer_id, 
@@ -157,6 +159,9 @@ export async function fetchLatestInvoices() {
             ...invoice,
             image_url: invoice.image_url || DEFAULT_AVATAR,
             date: formatDateToLocal(invoice.date),
+            payment_date: invoice.payment_date
+                ? formatDateToLocal(invoice.payment_date)
+                : null,
             amount: invoice.amount,
         }));
         return latestInvoices;
@@ -256,6 +261,7 @@ export async function fetchFilteredInvoices(
         invoices.id,
         invoices.amount,
         invoices.date,
+                invoices.payment_date,
         invoices.status,
         COALESCE(customers.name, 'Cliente removido') AS name,
         COALESCE(customers.email, '') AS email,
@@ -327,17 +333,13 @@ export async function fetchInvoiceById(id: string) {
         invoices.amount,
         invoices.status,
         invoices.date,
+        invoices.payment_date,
         invoices.created_by
       FROM invoices
       WHERE invoices.id = ${id} AND invoices.organization_id = ${organizationId};
     `;
 
-        const invoice = data.map((invoice) => ({
-            ...invoice,
-            // Convert amount from cents to dollars
-            amount: invoice.amount / 100,
-        }));
-        return invoice[0];
+        return data[0];
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Failed to fetch invoice.");
@@ -436,7 +438,7 @@ export async function fetchUserById(id: string) {
         const organizationId = await getOrganizationId();
 
         const data = await sql<User[]>`
-      SELECT id, name, email, password, role, image_url
+            SELECT id, name, email, password, role, image_url, iban
       FROM users
       WHERE id = ${id} AND organization_id = ${organizationId}
     `;

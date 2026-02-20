@@ -22,17 +22,20 @@ export function CreateInvoice() {
 export async function UpdateInvoice({
     id,
     createdBy,
+    status,
 }: {
     id: string;
     createdBy: string | null | undefined;
+    status: string;
 }) {
     const isAdmin = await isUserAdmin();
     const currentUser = await getCurrentUser();
 
     // Show button if admin or if user created this invoice
     const canEdit = isAdmin || (currentUser && currentUser.id === createdBy);
+    const isPaid = status === "paid";
 
-    if (!canEdit) {
+    if (!canEdit || isPaid) {
         return null;
     }
 
@@ -50,17 +53,20 @@ export async function UpdateInvoice({
 export async function DeleteInvoice({
     id,
     createdBy,
+    status,
 }: {
     id: string;
     createdBy: string | null | undefined;
+    status: string;
 }) {
     const isAdmin = await isUserAdmin();
     const currentUser = await getCurrentUser();
 
     // Show button if admin or if user created this invoice
     const canDelete = isAdmin || (currentUser && currentUser.id === createdBy);
+    const isPaid = status === "paid";
 
-    if (!canDelete) {
+    if (!canDelete || isPaid) {
         return null;
     }
 

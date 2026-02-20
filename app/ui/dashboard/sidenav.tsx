@@ -12,6 +12,7 @@ import {
     BarChart3,
     FileText,
     CircleUserRound,
+    Receipt,
 } from "lucide-react";
 import Link from "next/link";
 import AcmeLogo from "@/app/ui/primeflow-logo";
@@ -131,6 +132,12 @@ export default function SideNav() {
                         href="/dashboard/invoices"
                         icon={<FileText size={20} />}
                         label="Faturas"
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <NavItem
+                        href="/dashboard/receipts"
+                        icon={<Receipt size={20} />}
+                        label="Recibos"
                         onClick={() => setIsOpen(false)}
                     />
                     <NavItem

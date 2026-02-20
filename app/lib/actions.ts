@@ -13,6 +13,7 @@ import path from "path";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import type { Customer, Invoice } from "./definitions";
+import { createReceiptForPaidInvoice } from "./receipt-service";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -52,10 +53,26 @@ const FormSchema = z.object({
         invalid_type_error: "Please select a valid date.",
         required_error: "Please select a date.",
     }),
+    paymentDate: z.coerce
+        .date({
+            invalid_type_error: "Please select a valid payment date.",
+        })
+        .optional(),
+    activityCode: z
+        .string({
+            invalid_type_error: "Please select an activity.",
+        })
+        .min(1, "Please select an activity."),
 });
 
-const CreateInvoice = FormSchema.omit({ id: true });
-const UpdateInvoice = FormSchema.omit({ id: true });
+const CreateInvoice = FormSchema.omit({
+    id: true,
+    paymentDate: true,
+    status: true,
+});
+const UpdateInvoice = FormSchema.omit({ id: true }).extend({
+    activityCode: z.string().optional(),
+});
 
 export type State = {
     errors: {
@@ -63,6 +80,8 @@ export type State = {
         amount?: string[];
         status?: string[];
         date?: string[];
+        paymentDate?: string[];
+        activityCode?: string[];
     };
     message: string | null;
 };
@@ -80,12 +99,16 @@ const CustomerFormSchema = z.object({
     nif: z
         .string()
         .trim()
-        .regex(/^\d{9}$/, { message: "NIF deve ter exatamente 9 dígitos numéricos." }),
+        .regex(/^\d{9}$/, {
+            message: "NIF deve ter exatamente 9 dígitos numéricos.",
+        }),
     endereco_fiscal: z
         .string()
         .trim()
         .min(1, { message: "Por favor, insira o endereço fiscal." })
-        .max(255, { message: "Endereço fiscal não pode exceder 255 caracteres." }),
+        .max(255, {
+            message: "Endereço fiscal não pode exceder 255 caracteres.",
+        }),
 });
 
 const CreateCustomer = CustomerFormSchema;
@@ -239,8 +262,8 @@ export async function createInvoice(
     const validatedFields = CreateInvoice.safeParse({
         customerId: formData.get("customerId"),
         amount: formData.get("amount"),
-        status: formData.get("status"),
         date: formData.get("date"),
+        activityCode: formData.get("activityCode"),
     });
 
     if (!validatedFields.success) {
@@ -250,15 +273,18 @@ export async function createInvoice(
         };
     }
 
-    const { customerId, amount, status, date } = validatedFields.data;
-    const amountInCents = Math.round(amount);
+    const { customerId, amount, date, activityCode } = validatedFields.data;
+    const amountInCents = Math.round(amount * 100);
     const formattedDate = date.toISOString().split("T")[0];
 
+    let invoiceId: string | undefined;
     try {
-        await sql`
-            INSERT INTO invoices (customer_id, amount, status, date, created_by, organization_id)
-            VALUES (${customerId}, ${amountInCents}, ${status}, ${formattedDate}, ${creatorId}, ${organizationId})
+        const inserted = await sql<{ id: string }[]>`
+            INSERT INTO invoices (customer_id, amount, status, date, created_by, organization_id, activity_code)
+            VALUES (${customerId}, ${amountInCents}, 'pending', ${formattedDate}, ${creatorId}, ${organizationId}, ${activityCode})
+            RETURNING id
         `;
+        invoiceId = inserted[0]?.id;
     } catch (error) {
         console.error(error);
         return {
@@ -337,11 +363,20 @@ export async function updateInvoice(
         };
     }
 
+    // Prevent editing paid invoices
+    if (invoice.status === "paid") {
+        return {
+            errors: {},
+            message: "Cannot edit paid invoices.",
+        };
+    }
+
     const validatedFields = UpdateInvoice.safeParse({
         customerId: formData.get("customerId"),
         amount: formData.get("amount"),
         status: formData.get("status"),
         date: formData.get("date"),
+        paymentDate: formData.get("paymentDate") || undefined,
     });
 
     if (!validatedFields.success) {
@@ -351,21 +386,83 @@ export async function updateInvoice(
         };
     }
 
-    const { customerId, amount, status, date } = validatedFields.data;
-    const amountInCents = Math.round(amount);
+    const { customerId, amount, status, date, paymentDate } =
+        validatedFields.data;
+
+    // Validate payment date range if provided
+    if (paymentDate) {
+        const launchDate = new Date(date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // End of today
+
+        if (paymentDate < launchDate || paymentDate > today) {
+            return {
+                errors: {
+                    paymentDate: [
+                        "Payment date must be between launch date and today.",
+                    ],
+                },
+                message: "Invalid payment date.",
+            };
+        }
+    }
+
+    const shouldCreateReceipt =
+        invoice.status === "pending" && status === "paid";
+
+    console.log("🔍 shouldCreateReceipt evaluation:", {
+        condition: `invoice.status === "pending" && status === "paid"`,
+        "invoice.status": invoice.status,
+        status: status,
+        shouldCreateReceipt,
+    });
+
+    const amountInCents = Math.round(amount * 100); // Converter euros para centavos
     const formattedDate = date.toISOString().split("T")[0];
+    const formattedPaymentDate = paymentDate
+        ? paymentDate.toISOString().split("T")[0]
+        : null;
+
+    console.log("🔧 UPDATE Values:", {
+        customerId,
+        amountInCents,
+        status,
+        formattedDate,
+        formattedPaymentDate,
+        invoiceId: id,
+    });
 
     try {
-        await sql`
+        const result = await sql`
             UPDATE invoices
-            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}, date = ${formattedDate}
+            SET customer_id = ${customerId}, 
+                amount = ${amountInCents}, 
+                status = ${status}, 
+                date = ${formattedDate},
+                payment_date = ${formattedPaymentDate}
             WHERE id = ${id}
         `;
+
+        console.log("✅ UPDATE Result:", result);
     } catch (error) {
+        console.error("❌ UPDATE Error:", error);
         return {
             errors: {},
             message: "Database Error: Failed to Update Invoice.",
         };
+    }
+
+    if (shouldCreateReceipt) {
+        try {
+            await createReceiptForPaidInvoice(id);
+        } catch (error) {
+            console.error("Receipt creation failed:", error);
+            return {
+                errors: {},
+                message:
+                    "Invoice updated, but failed to generate receipt. Please check IBAN and try again.",
+            };
+        }
     }
 
     revalidatePath("/dashboard/invoices");
@@ -416,6 +513,11 @@ export async function deleteInvoice(id: string) {
         throw new Error(
             "Unauthorized: You can only delete invoices you created.",
         );
+    }
+
+    // Prevent deleting paid invoices
+    if (invoice.status === "paid") {
+        throw new Error("Cannot delete paid invoices.");
     }
 
     try {
@@ -494,7 +596,8 @@ export async function createCustomer(
         };
     }
 
-    const { firstName, lastName, email, nif, endereco_fiscal } = validatedFields.data;
+    const { firstName, lastName, email, nif, endereco_fiscal } =
+        validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     let customerId: string;
@@ -618,7 +721,8 @@ export async function updateCustomer(
         };
     }
 
-    const { firstName, lastName, email, nif, endereco_fiscal } = validatedFields.data;
+    const { firstName, lastName, email, nif, endereco_fiscal } =
+        validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     try {
@@ -721,6 +825,14 @@ const UserFormSchema = z.object({
         .trim()
         .min(1, { message: "Please enter a last name." }),
     email: z.string().email({ message: "Please enter a valid email." }),
+    iban: z
+        .string()
+        .trim()
+        .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/, {
+            message: "Please enter a valid IBAN.",
+        })
+        .optional()
+        .or(z.literal("")),
     password: z
         .string()
         .min(6, { message: "Password must be at least 6 characters." })
@@ -746,6 +858,7 @@ export type UserState = {
         firstName?: string[];
         lastName?: string[];
         email?: string[];
+        iban?: string[];
         password?: string[];
         role?: string[];
         imageFile?: string[];
@@ -770,6 +883,7 @@ export async function createUser(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
+        iban: formData.get("iban"),
         password: formData.get("password"),
         role: formData.get("role"),
     });
@@ -782,7 +896,17 @@ export async function createUser(
     }
 
     const imageFile = formData.get("imageFile");
-    const { firstName, lastName, email, password, role } = validatedFields.data;
+    const { firstName, lastName, email, iban, password, role } =
+        validatedFields.data;
+
+    // IBAN é obrigatório para admins
+    if (role === "admin" && (!iban || iban.length === 0)) {
+        return {
+            errors: { iban: ["IBAN is required for admin users."] },
+            message: "IBAN is required for admin users.",
+        };
+    }
+
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -852,9 +976,10 @@ export async function createUser(
     // Now create user in database with clerk_user_id
     let userId: string;
     try {
+        const normalizedIban = iban ? iban.replace(/\s+/g, "") : null;
         const result = await sql`
-            INSERT INTO users (id, name, email, password, role, clerk_user_id, organization_id)
-            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${hashedPassword}, ${role}, ${clerkUserId}, ${organizationId})
+            INSERT INTO users (id, name, email, password, role, clerk_user_id, organization_id, iban)
+            VALUES (gen_random_uuid(), ${fullName}, ${email}, ${hashedPassword}, ${role}, ${clerkUserId}, ${organizationId}, ${normalizedIban})
             RETURNING id
         `;
         userId = result[0].id;
@@ -933,13 +1058,26 @@ export async function updateUser(
     // Verify that user belongs to admin's organization
     try {
         const userCheck = await sql<
-            { id: string }[]
-        >`SELECT id FROM users WHERE id = ${id} AND organization_id = ${organizationId}`;
+            { id: string; role: string }[]
+        >`SELECT id, role FROM users WHERE id = ${id} AND organization_id = ${organizationId}`;
         if (userCheck.length === 0) {
             return {
                 errors: {},
                 message:
                     "User not found or does not belong to your organization.",
+            };
+        }
+
+        // Se estiver atualizando um admin, IBAN é obrigatório
+        const userRole = userCheck[0].role;
+        const iban = formData.get("iban");
+        if (
+            userRole === "admin" &&
+            (!iban || (typeof iban === "string" && iban.trim().length === 0))
+        ) {
+            return {
+                errors: { iban: ["IBAN is required for admin users."] },
+                message: "IBAN is required for admin users.",
             };
         }
     } catch (error) {
@@ -953,6 +1091,7 @@ export async function updateUser(
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         email: formData.get("email"),
+        iban: formData.get("iban"),
         password: formData.get("password"),
     });
 
@@ -963,21 +1102,22 @@ export async function updateUser(
         };
     }
 
-    const { firstName, lastName, email, password } = validatedFields.data;
+    const { firstName, lastName, email, iban, password } = validatedFields.data;
     const fullName = `${firstName} ${lastName}`.trim().replace(/\s+/g, " ");
+    const normalizedIban = iban ? iban.replace(/\s+/g, "") : null;
 
     try {
         if (password && password.length >= 6) {
             const hashedPassword = await bcrypt.hash(password, 10);
             await sql`
                 UPDATE users
-                SET name = ${fullName}, email = ${email}, password = ${hashedPassword}
+                SET name = ${fullName}, email = ${email}, iban = ${normalizedIban}, password = ${hashedPassword}
                 WHERE id = ${id}
             `;
         } else {
             await sql`
                 UPDATE users
-                SET name = ${fullName}, email = ${email}
+                SET name = ${fullName}, email = ${email}, iban = ${normalizedIban}
                 WHERE id = ${id}
             `;
         }

@@ -13,7 +13,8 @@ import {
 import { Button } from "@/app/ui/button";
 import { createInvoice, State } from "@/app/lib/actions";
 import { useActionState, useState } from "react";
-import { formatCurrencyPTBR } from "@/app/lib/utils";
+import { formatCurrency } from "@/app/lib/utils";
+import { RECEIPT_ACTIVITIES } from "@/app/lib/receipt-activities";
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
     const initialState: State = { message: null, errors: {} };
@@ -21,13 +22,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
     const [amount, setAmount] = useState("");
     const today = new Date().toISOString().split("T")[0];
 
-    const formatCurrency = (value: string) => {
+    const formatCurrencyInput = (value: string) => {
         if (!value) return "";
-        const number = parseFloat(value);
-        return new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-        }).format(number);
+        return formatCurrency(value, "pt-BR", "EUR", false);
     };
 
     return (
@@ -118,8 +115,8 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                             id="amount"
                             name="amount"
                             type="number"
-                            step="1"
-                            placeholder="Digite o valor em cêntimos (ex: 85000 para € 850,00)"
+                            step="0.01"
+                            placeholder="Digite o valor em euros (ex: 850,00)"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
@@ -130,7 +127,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                     </div>
                     {amount && (
                         <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">
-                            Valor: {formatCurrencyPTBR(amount)}
+                            Valor: {formatCurrencyInput(amount)}
                         </p>
                     )}
                     <div
@@ -164,6 +161,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                             name="date"
                             type="date"
                             defaultValue={today}
+                            max={today}
                             className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 px-10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all dark:[color-scheme:dark]"
                             required
                         />
@@ -182,65 +180,61 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                     </div>
                 </div>
 
-                {/* Invoice Status */}
-                <fieldset className="mb-6">
-                    <legend className="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Status da Fatura
-                    </legend>
-                    <div className="space-y-3">
-                        <label
-                            htmlFor="pending"
-                            className="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 cursor-pointer hover:border-yellow-500/50 hover:bg-yellow-50 dark:hover:bg-gray-800/80 transition-all group has-[:checked]:border-yellow-500 has-[:checked]:bg-yellow-50 dark:has-[:checked]:bg-yellow-500/10"
-                        >
-                            <input
-                                id="pending"
-                                name="status"
-                                type="radio"
-                                value="pending"
-                                defaultChecked
-                                className="h-4 w-4 cursor-pointer border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-yellow-500 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-0"
-                                aria-describedby="status-error"
-                            />
-                            <div className="flex items-center gap-2">
-                                <ClockIcon className="h-5 w-5 text-yellow-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white">
-                                    Pendente
-                                </span>
-                            </div>
-                            <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 rounded-full">
-                                Aguardando pagamento
-                            </span>
-                        </label>
+                {/* Hidden status field - always "pending" */}
+                <input type="hidden" name="status" value="pending" />
 
-                        <label
-                            htmlFor="paid"
-                            className="flex items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 cursor-pointer hover:border-green-500/50 hover:bg-green-50 dark:hover:bg-gray-800/80 transition-all group has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-500/10"
+                {/* Activity Code */}
+                <div className="mb-6">
+                    <label
+                        htmlFor="activityCode"
+                        className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                        Atividade Exercida
+                    </label>
+                    <div className="relative">
+                        <select
+                            id="activityCode"
+                            name="activityCode"
+                            className="peer block w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-8 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all appearance-none"
+                            defaultValue=""
+                            aria-describedby="activity-error"
+                            required
                         >
-                            <input
-                                id="paid"
-                                name="status"
-                                type="radio"
-                                value="paid"
-                                className="h-4 w-4 cursor-pointer border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-0"
-                            />
-                            <div className="flex items-center gap-2">
-                                <CheckIcon className="h-5 w-5 text-green-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white">
-                                    Pago
-                                </span>
-                            </div>
-                            <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-green-500/20 text-green-600 dark:text-green-400 rounded-full">
-                                Pagamento confirmado
-                            </span>
-                        </label>
+                            <option value="" disabled className="text-gray-500">
+                                Selecione uma atividade
+                            </option>
+                            {RECEIPT_ACTIVITIES.map((activity) => (
+                                <option
+                                    key={activity.code}
+                                    value={activity.code}
+                                    className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                >
+                                    {activity.code} - {activity.label}
+                                </option>
+                            ))}
+                        </select>
+                        {/* Custom dropdown arrow */}
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg
+                                className="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </div>
                     </div>
                     <div
-                        id="status-error"
+                        id="activity-error"
                         aria-live="polite"
                         aria-atomic="true"
                     >
-                        {state.errors?.status &&
-                            state.errors.status.map((error: string) => (
+                        {state.errors?.activityCode &&
+                            state.errors.activityCode.map((error: string) => (
                                 <p
                                     className="mt-2 text-sm text-red-400"
                                     key={error}
@@ -249,7 +243,7 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                                 </p>
                             ))}
                     </div>
-                </fieldset>
+                </div>
 
                 {/* Error Message */}
                 {state.message && (

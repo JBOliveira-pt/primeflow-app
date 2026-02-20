@@ -150,6 +150,33 @@ export default function CreateUserForm() {
                     </div>
                 </div>
 
+                {/* IBAN */}
+                <div className="mb-6 space-y-2">
+                    <label
+                        htmlFor="iban"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                        IBAN do Emissor
+                    </label>
+                    <div className="relative">
+                        <input
+                            id="iban"
+                            name="iban"
+                            type="text"
+                            className="peer block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="PT50 0002 0123 1234 5678 9015 4"
+                            aria-describedby="iban-error"
+                        />
+                        <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500 peer-focus:text-blue-400 transition-colors" />
+                    </div>
+                    <p className="text-xs text-gray-500">
+                        Necessario para emissao de recibos
+                    </p>
+                    <div id="iban-error" aria-live="polite" aria-atomic="true">
+                        {renderErrors(state.errors?.iban)}
+                    </div>
+                </div>
+
                 {/* Password */}
                 <div className="mb-6 space-y-2">
                     <label

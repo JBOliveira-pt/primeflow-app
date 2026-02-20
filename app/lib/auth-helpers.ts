@@ -69,9 +69,10 @@ export async function getCurrentUser() {
                 role: string;
                 organization_id: string;
                 image_url: string | null;
+                iban: string | null;
             }[]
         >`
-            SELECT id, name, email, role, organization_id, image_url
+                SELECT id, name, email, role, organization_id, image_url, iban
             FROM users 
             WHERE clerk_user_id = ${userId}
         `;

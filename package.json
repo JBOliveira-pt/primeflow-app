@@ -11,6 +11,7 @@
         "@aws-sdk/s3-request-presigner": "^3.983.0",
         "@clerk/nextjs": "^6.37.3",
         "@heroicons/react": "^2.2.0",
+        "@react-pdf/renderer": "^4.3.2",
         "@tailwindcss/forms": "^0.5.10",
         "bcrypt": "^5.1.1",
         "class-variance-authority": "^0.7.1",
@@ -18,6 +19,7 @@
         "dotenv": "^17.2.3",
         "lucide-react": "^0.563.0",
         "next": "^16.1.6",
+        "pdfkit": "^0.15.0",
         "postcss": "8.5.1",
         "postgres": "^3.4.6",
         "react": "^19.2.4",
@@ -30,9 +32,11 @@
         "zod": "^3.25.17"
     },
     "devDependencies": {
+        "@swc/helpers": "^0.5.18",
         "@tailwindcss/postcss": "^4.1.18",
         "@types/bcrypt": "^5.0.2",
         "@types/node": "22.10.7",
+        "@types/pdfkit": "^0.13.8",
         "@types/react": "19.0.7",
         "@types/react-dom": "19.0.3",
         "eslint": "^9.39.2",

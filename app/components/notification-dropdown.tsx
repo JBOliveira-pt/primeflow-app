@@ -14,6 +14,15 @@ interface Invoice {
     status: "pending" | "paid";
 }
 
+interface ReceiptNotification {
+    id: string;
+    receipt_number: number;
+    customer_name: string;
+    amount: number;
+    received_date: string;
+    status: "pending_send" | "sent_to_customer";
+}
+
 interface NotificationDropdownProps {
     hasUnread?: boolean;
 }
@@ -24,6 +33,10 @@ export function NotificationDropdown({
     const [isOpen, setIsOpen] = useState(false);
     const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
     const [totalPending, setTotalPending] = useState(0);
+    const [pendingReceipts, setPendingReceipts] = useState<
+        ReceiptNotification[]
+    >([]);
+    const [totalPendingReceipts, setTotalPendingReceipts] = useState(0);
     const [loading, setLoading] = useState(false);
     const [positionAbove, setPositionAbove] = useState(false);
     const router = useRouter();
@@ -36,6 +49,10 @@ export function NotificationDropdown({
             const data = await response.json();
             setPendingInvoices(data.invoices || []);
             setTotalPending(data.total || 0);
+            const receiptResponse = await fetch("/api/receipts/pending");
+            const receiptData = await receiptResponse.json();
+            setPendingReceipts(receiptData.receipts || []);
+            setTotalPendingReceipts(receiptData.total || 0);
         } catch (error) {
             console.error("Failed to fetch pending invoices:", error);
         } finally {
@@ -87,7 +104,13 @@ export function NotificationDropdown({
         router.push("/dashboard/invoices");
     };
 
-    const showBadge = !loading && totalPending > 0;
+    const handleViewAllReceipts = () => {
+        setIsOpen(false);
+        router.push("/dashboard/receipts");
+    };
+
+    const showBadge =
+        !loading && (totalPending > 0 || totalPendingReceipts > 0);
 
     return (
         <div className="relative" ref={containerRef}>
@@ -112,11 +135,14 @@ export function NotificationDropdown({
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                            Faturas Pendentes
+                            Notificações
                         </h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                             {totalPending} fatura
-                            {totalPending !== 1 ? "s" : ""} aguardando pagamento
+                            {totalPending !== 1 ? "s" : ""}
+                            {" - "}
+                            {totalPendingReceipts} recibo
+                            {totalPendingReceipts !== 1 ? "s" : ""}
                         </p>
                     </div>
 
@@ -126,58 +152,109 @@ export function NotificationDropdown({
                             <div className="px-4 py-6 text-center text-sm text-gray-500">
                                 Carregando...
                             </div>
-                        ) : pendingInvoices.length > 0 ? (
-                            pendingInvoices.map((invoice) => (
-                                <div
-                                    key={invoice.id}
-                                    className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {invoice.customer_name}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {new Date(
-                                                    invoice.date,
-                                                ).toLocaleDateString("pt-BR")}
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {formatCurrencyPTBR(
-                                                    invoice.amount,
-                                                )}
-                                            </p>
-                                            <div className="flex items-center gap-1 mt-1 text-yellow-600 dark:text-yellow-500">
-                                                <Clock size={12} />
-                                                <span className="text-xs">
-                                                    Pendente
-                                                </span>
+                        ) : pendingInvoices.length > 0 ||
+                          pendingReceipts.length > 0 ? (
+                            <>
+                                {pendingReceipts.map((receipt) => (
+                                    <div
+                                        key={receipt.id}
+                                        className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    Recibo #
+                                                    {receipt.receipt_number}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    {receipt.customer_name}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {formatCurrencyPTBR(
+                                                        receipt.amount,
+                                                    )}
+                                                </p>
+                                                <div className="flex items-center gap-1 mt-1 text-yellow-600 dark:text-yellow-500">
+                                                    <Clock size={12} />
+                                                    <span className="text-xs">
+                                                        Env. Pendente
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                ))}
+
+                                {pendingInvoices.map((invoice) => (
+                                    <div
+                                        key={invoice.id}
+                                        className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {invoice.customer_name}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    {new Date(
+                                                        invoice.date,
+                                                    ).toLocaleDateString(
+                                                        "pt-BR",
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {formatCurrencyPTBR(
+                                                        invoice.amount,
+                                                    )}
+                                                </p>
+                                                <div className="flex items-center gap-1 mt-1 text-yellow-600 dark:text-yellow-500">
+                                                    <Clock size={12} />
+                                                    <span className="text-xs">
+                                                        Pgto. Pendente
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </>
                         ) : (
                             <div className="px-4 py-6 text-center">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Nenhuma fatura pendente
+                                    Nenhuma notificação pendente
                                 </p>
                             </div>
                         )}
                     </div>
 
                     {/* Footer */}
-                    {pendingInvoices.length > 0 && (
+                    {(pendingInvoices.length > 0 ||
+                        pendingReceipts.length > 0) && (
                         <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-800">
-                            <Button
-                                variant="outline"
-                                className="w-full text-xs cursor-pointer"
-                                onClick={handleViewAllInvoices}
-                            >
-                                Ver todas as faturas pendentes
-                            </Button>
+                            <div className="flex flex-row gap-2">
+                                {pendingReceipts.length > 0 ? (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full text-xs cursor-pointer"
+                                        onClick={handleViewAllReceipts}
+                                    >
+                                        Recibos pendentes
+                                    </Button>
+                                ) : null}
+                                {pendingInvoices.length > 0 ? (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full text-xs cursor-pointer"
+                                        onClick={handleViewAllInvoices}
+                                    >
+                                        Faturas pendentes
+                                    </Button>
+                                ) : null}
+                            </div>
                         </div>
                     )}
                 </div>

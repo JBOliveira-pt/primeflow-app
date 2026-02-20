@@ -31,9 +31,12 @@ export default async function LatestInvoices() {
             {/* Lista de Invoices */}
             <div className="flex grow flex-col justify-between rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
                 <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                    
                     {latestInvoices.map((invoice) => {
                         const isPaid = invoice.status === "paid";
+                        const dateLabel = isPaid
+                            ? invoice.payment_date || " - "
+                            : invoice.date;
+                        const DateIcon = isPaid ? CheckCircle : Clock;
 
                         return (
                             <div
@@ -112,8 +115,15 @@ export default async function LatestInvoices() {
                                             {formatCurrencyPTBR(invoice.amount)}
                                         </span>
                                         <span className="text-xs text-gray-500 flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {invoice.date}
+                                            <DateIcon
+                                                className={clsx(
+                                                    "w-3 h-3",
+                                                    isPaid
+                                                        ? "text-green-500"
+                                                        : "text-gray-500",
+                                                )}
+                                            />
+                                            {dateLabel}
                                         </span>
                                     </div>
                                 </div>

@@ -20,6 +20,17 @@ export default async function InvoicesTable({
             : "text-yellow-600 dark:text-yellow-400";
     };
 
+    const getPaymentDateLabel = (
+        status: string,
+        paymentDate?: string | null,
+    ) => {
+        if (status !== "paid" || !paymentDate) {
+            return <span className="flex justify-center pr-10">--</span>;
+        }
+
+        return formatDateToLocal(paymentDate);
+    };
+
     return (
         <div className="mt-6 flow-root">
             <div className="inline-block min-w-full align-middle">
@@ -61,15 +72,24 @@ export default async function InvoicesTable({
                                         <p className="text-xs text-gray-500">
                                             {formatDateToLocal(invoice.date)}
                                         </p>
+                                        <p className="text-xs text-gray-400">
+                                            Pagamento:{" "}
+                                            {getPaymentDateLabel(
+                                                invoice.status,
+                                                invoice.payment_date,
+                                            )}
+                                        </p>
                                     </div>
                                     <div className="flex justify-end gap-2">
                                         <UpdateInvoice
                                             id={invoice.id}
                                             createdBy={invoice.created_by}
+                                            status={invoice.status}
                                         />
                                         <DeleteInvoice
                                             id={invoice.id}
                                             createdBy={invoice.created_by}
+                                            status={invoice.status}
                                         />
                                     </div>
                                 </div>
@@ -112,7 +132,13 @@ export default async function InvoicesTable({
                                     scope="col"
                                     className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
                                 >
-                                    Data
+                                    Lançamento
+                                </th>
+                                <th
+                                    scope="col"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                >
+                                    Pagamento
                                 </th>
                                 <th
                                     scope="col"
@@ -163,6 +189,12 @@ export default async function InvoicesTable({
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
                                         {formatDateToLocal(invoice.date)}
                                     </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                        {getPaymentDateLabel(
+                                            invoice.status,
+                                            invoice.payment_date,
+                                        )}
+                                    </td>
                                     <td className="whitespace-nowrap px-3 py-4">
                                         <InvoiceStatus
                                             status={invoice.status}
@@ -173,10 +205,12 @@ export default async function InvoicesTable({
                                             <UpdateInvoice
                                                 id={invoice.id}
                                                 createdBy={invoice.created_by}
+                                                status={invoice.status}
                                             />
                                             <DeleteInvoice
                                                 id={invoice.id}
                                                 createdBy={invoice.created_by}
+                                                status={invoice.status}
                                             />
                                         </div>
                                     </td>
