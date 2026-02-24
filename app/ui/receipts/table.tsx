@@ -49,8 +49,8 @@ export default async function ReceiptsTable({
                                     </div>
                                     <ReceiptActions
                                         receiptId={receipt.id}
-                                        invoiceCreatedBy={
-                                            receipt.invoice_created_by
+                                        receiptCreatedBy={
+                                            receipt.receipt_created_by
                                         }
                                         status={receipt.status}
                                         pdfUrl={receipt.pdf_url}
@@ -146,8 +146,8 @@ export default async function ReceiptsTable({
                                         <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                                             <ReceiptActions
                                                 receiptId={receipt.id}
-                                                invoiceCreatedBy={
-                                                    receipt.invoice_created_by
+                                                receiptCreatedBy={
+                                                    receipt.receipt_created_by
                                                 }
                                                 status={receipt.status}
                                                 pdfUrl={receipt.pdf_url}

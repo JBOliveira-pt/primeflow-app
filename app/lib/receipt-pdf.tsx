@@ -91,7 +91,9 @@ const ReceiptDocument: React.FC<ReceiptDocumentProps> = ({ data }) => (
             </Text>
 
             <View style={styles.section}>
-                <Text style={styles.row}>Data de emissao: {data.issueDate}</Text>
+                <Text style={styles.row}>
+                    Data de emissao: {data.issueDate}
+                </Text>
                 <Text style={styles.row}>
                     Data de recebimento: {data.receivedDate}
                 </Text>
@@ -122,8 +124,7 @@ const ReceiptDocument: React.FC<ReceiptDocumentProps> = ({ data }) => (
                 <Text style={styles.row}>Referencia: {data.invoice.id}</Text>
                 <Text style={styles.row}>Data: {data.invoice.date}</Text>
                 <Text style={styles.row}>
-                    Valor recebido:{" "}
-                    {formatCurrencyPTBR(data.invoice.amount)}
+                    Valor recebido: {formatCurrencyPTBR(data.invoice.amount)}
                 </Text>
                 <Text style={styles.row}>
                     Metodo de pagamento: Transferencia bancaria
@@ -156,8 +157,17 @@ const ReceiptDocument: React.FC<ReceiptDocumentProps> = ({ data }) => (
 export async function generateReceiptPdf(
     data: ReceiptPdfData,
 ): Promise<Buffer> {
-    const buffer = await renderToBuffer(
-        <ReceiptDocument data={data} />,
-    );
-    return Buffer.from(buffer);
+    try {
+        console.log("🎨 Gerando PDF para recibo #" + data.receiptNumber);
+        const buffer = await renderToBuffer(<ReceiptDocument data={data} />);
+        console.log(
+            "✅ PDF gerado com sucesso, tamanho:",
+            buffer.length,
+            "bytes",
+        );
+        return Buffer.from(buffer);
+    } catch (error) {
+        console.error("❌ Erro ao gerar PDF:", error);
+        throw error;
+    }
 }

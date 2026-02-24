@@ -1,8 +1,8 @@
 import postgres from "postgres";
 import { auth } from "@clerk/nextjs/server";
-import { canEditResource, isUserAdmin } from "./auth-helpers";
+import { canEditResource, isUserAdmin, getCurrentUser } from "./auth-helpers";
 import { uploadReceiptPdfToR2 } from "./r2-storage";
-import type { ReceiptPdfData } from "./receipt-pdf.tsx";
+import { generateReceiptPdf, type ReceiptPdfData } from "./receipt-pdf";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -62,15 +62,7 @@ export async function createReceiptForPaidInvoice(invoiceId: string) {
         throw new Error("Invoice not found");
     }
 
-    console.log("📊 Invoice found:", {
-        id: invoice.id,
-        status: invoice.status,
-        amount: invoice.amount,
-        activity_code: invoice.activity_code,
-    });
-
     if (invoice.status !== "paid") {
-        console.log("⚠️ Invoice status is not 'paid':", invoice.status);
         return null;
     }
 
@@ -79,10 +71,6 @@ export async function createReceiptForPaidInvoice(invoiceId: string) {
     >`SELECT id FROM receipts WHERE invoice_id = ${invoiceId}`;
 
     if (existingReceipt.length > 0) {
-        console.log(
-            "⚠️ Receipt already exists for this invoice:",
-            existingReceipt[0].id,
-        );
         return existingReceipt[0].id;
     }
 
@@ -94,12 +82,6 @@ export async function createReceiptForPaidInvoice(invoiceId: string) {
     if (!issuer) {
         throw new Error("Admin not found in organization");
     }
-
-    console.log("👤 Issuer found:", {
-        id: issuer.id,
-        name: issuer.name,
-        iban: issuer.iban ? "***" : "NOT SET",
-    });
 
     if (!issuer.iban) {
         throw new Error("IBAN do administrador obrigatorio para criar recibo.");
@@ -142,7 +124,9 @@ export async function createReceiptForPaidInvoice(invoiceId: string) {
         RETURNING id
     `;
 
-    return inserted[0]?.id || null;
+    const receiptId = inserted[0]?.id || null;
+    console.log("✅ Recibo criado: #" + receiptNumber);
+    return receiptId;
 }
 
 export async function updateReceiptDetails(
@@ -188,8 +172,11 @@ export async function updateReceiptDetails(
 }
 
 export async function sendReceipt(receiptId: string) {
+    console.log("📤 Iniciando envio de recibo:", receiptId);
+
     const { userId } = await auth();
     if (!userId) {
+        console.error("🔴 No userId, throwing Unauthorized");
         throw new Error("Unauthorized");
     }
 
@@ -214,6 +201,13 @@ export async function sendReceipt(receiptId: string) {
     if (!receipt) {
         throw new Error("Receipt not found");
     }
+
+    console.log(
+        "📋 Recibo encontrado:",
+        receipt.receipt_number,
+        "Status:",
+        receipt.status,
+    );
 
     if (receipt.status !== "pending_send") {
         throw new Error("Receipt already sent");
@@ -278,10 +272,21 @@ export async function sendReceipt(receiptId: string) {
 
     const today = toDateString(new Date());
 
+    // Ensure dates are strings (postgres client may return Date objects)
+    const receivedDateStr =
+        typeof receipt.received_date === "string"
+            ? receipt.received_date
+            : toDateString(receipt.received_date as unknown as Date);
+
+    const invoiceDateStr =
+        typeof invoice.date === "string"
+            ? invoice.date
+            : toDateString(invoice.date as unknown as Date);
+
     const pdfData: ReceiptPdfData = {
         receiptNumber: receipt.receipt_number,
         issueDate: today,
-        receivedDate: receipt.received_date,
+        receivedDate: receivedDateStr,
         issuer: {
             name: issuer.name,
             email: issuer.email,
@@ -295,7 +300,7 @@ export async function sendReceipt(receiptId: string) {
         invoice: {
             id: invoice.id,
             amount: receipt.amount,
-            date: invoice.date,
+            date: invoiceDateStr,
         },
         fiscal: {
             activityCode: receipt.activity_code,
@@ -304,38 +309,54 @@ export async function sendReceipt(receiptId: string) {
         },
     };
 
-    const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/receipts/pdf`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(pdfData),
-        },
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to generate PDF");
+    let buffer: Buffer;
+    try {
+        buffer = await generateReceiptPdf(pdfData);
+    } catch (pdfError) {
+        const errorMsg =
+            pdfError instanceof Error ? pdfError.message : String(pdfError);
+        console.error("❌ Falha ao gerar PDF:", errorMsg);
+        throw new Error(`Falha ao gerar PDF: ${errorMsg}`);
     }
 
-    const pdfBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(pdfBuffer);
+    let pdfUrl: string;
+    try {
+        pdfUrl = await uploadReceiptPdfToR2(
+            buffer,
+            receipt.id,
+            receipt.receipt_number,
+        );
+    } catch (uploadError) {
+        const errorMsg =
+            uploadError instanceof Error
+                ? uploadError.message
+                : String(uploadError);
+        console.error("❌ Falha ao fazer upload do PDF:", errorMsg);
+        throw new Error(`Falha ao fazer upload do PDF: ${errorMsg}`);
+    }
 
-    const pdfUrl = await uploadReceiptPdfToR2(
-        buffer,
-        receipt.id,
-        receipt.receipt_number,
-    );
+    try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+            throw new Error("User not found");
+        }
 
-    await sql`
-        UPDATE receipts
-        SET status = 'sent_to_customer',
-            pdf_url = ${pdfUrl},
-            sent_at = now(),
-            updated_at = now()
-        WHERE id = ${receipt.id}
-    `;
+        await sql`
+            UPDATE receipts
+            SET status = 'sent_to_customer',
+                pdf_url = ${pdfUrl},
+                sent_at = now(),
+                sent_by_user = ${currentUser.id},
+                updated_at = now()
+            WHERE id = ${receipt.id}
+        `;
+        console.log("✅ Recibo enviado: #" + receipt.receipt_number);
+    } catch (dbError) {
+        const errorMsg =
+            dbError instanceof Error ? dbError.message : String(dbError);
+        console.error("❌ Falha ao atualizar recibo:", errorMsg);
+        throw new Error(`Falha ao atualizar recibo: ${errorMsg}`);
+    }
 
     return pdfUrl;
 }

@@ -9,19 +9,19 @@ import { sendReceiptAction } from "@/app/lib/receipt-actions";
 
 export async function ReceiptActions({
     receiptId,
-    invoiceCreatedBy,
+    receiptCreatedBy,
     status,
     pdfUrl,
 }: {
     receiptId: string;
-    invoiceCreatedBy: string | null;
+    receiptCreatedBy: string | null;
     status: "pending_send" | "sent_to_customer";
     pdfUrl: string | null;
 }) {
     const isAdmin = await isUserAdmin();
     const currentUser = await getCurrentUser();
     const canSend =
-        isAdmin || (currentUser && currentUser.id === invoiceCreatedBy);
+        isAdmin || (currentUser && currentUser.id === receiptCreatedBy);
 
     const sendWithId = sendReceiptAction.bind(null, receiptId);
 
@@ -38,6 +38,8 @@ export async function ReceiptActions({
             {pdfUrl ? (
                 <a
                     href={pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="rounded-lg border border-gray-700 p-2 hover:bg-gray-800 hover:border-gray-600 transition-all group"
                     title="Download PDF"
                 >

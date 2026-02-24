@@ -88,7 +88,7 @@ export async function fetchFilteredReceipts(
             invoices.payment_date AS payment_date,
             receipts.status,
             receipts.pdf_url,
-            invoices.created_by AS invoice_created_by,
+            receipts.created_by AS receipt_created_by,
             COALESCE(customers.name, 'Cliente removido') AS customer_name,
             COALESCE(customers.email, '') AS customer_email
         FROM receipts

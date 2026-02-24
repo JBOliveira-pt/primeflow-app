@@ -168,6 +168,6 @@ export type ReceiptsTableRow = {
     payment_date: string | null;
     status: ReceiptStatus;
     pdf_url: string | null;
-    invoice_created_by: string | null;
+    receipt_created_by: string | null;
     invoice_id: string;
 };

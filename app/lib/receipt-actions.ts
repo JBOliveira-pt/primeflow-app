@@ -60,10 +60,16 @@ export async function updateReceiptDetailsAction(
 
 export async function sendReceiptAction(receiptId: string) {
     try {
-        await sendReceipt(receiptId);
+        console.log("🚀 sendReceiptAction inicializado para:", receiptId);
+        const result = await sendReceipt(receiptId);
+        console.log(
+            "✅ Recibo enviado com sucesso, PDF URL:",
+            result?.substring(0, 50) + "...",
+        );
     } catch (error) {
         const message =
             error instanceof Error ? error.message : "Falha ao enviar recibo.";
+        console.error("❌ Erro em sendReceiptAction:", message);
         redirect(
             `/dashboard/receipts/${receiptId}?error=${encodeURIComponent(message)}`,
         );
