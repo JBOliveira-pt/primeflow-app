@@ -61,7 +61,7 @@ export default function ReceiptEditForm({
     };
 
     const handleToggleSent = async () => {
-        if (isSent) {
+        if (isSent || !canSend) {
             return;
         }
 
@@ -246,15 +246,25 @@ export default function ReceiptEditForm({
                                         </p>
                                     </>
                                 ) : (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        Recibo ainda não foi enviado ao cliente
-                                    </p>
+                                    <>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Recibo ainda não foi enviado ao
+                                            cliente
+                                        </p>
+                                        {!canSend && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Apenas o utilizador que criou
+                                                este recibo pode marcar como
+                                                enviado.
+                                            </p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
                         <button
                             onClick={handleToggleSent}
-                            disabled={isToggling || isSent}
+                            disabled={isToggling || isSent || !canSend}
                             className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
                                 isSent
                                     ? "bg-green-500"

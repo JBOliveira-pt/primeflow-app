@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { fetchReceiptDetail } from "@/app/lib/receipts-data";
 import ReceiptEditForm from "@/app/ui/receipts/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
+import { getCurrentUser } from "@/app/lib/auth-helpers";
 
 export const metadata: Metadata = {
     title: "Receipt | PrimeFlow Dashboard",
@@ -16,6 +17,11 @@ export default async function Page({
 }) {
     const { id } = await params;
     const receipt = await fetchReceiptDetail(id);
+    const currentUser = await getCurrentUser();
+    const canSend =
+        !!currentUser &&
+        (currentUser.role === "admin" ||
+            currentUser.id === receipt.receipt_created_by);
 
     return (
         <main className="p-5">
@@ -29,7 +35,7 @@ export default async function Page({
                     },
                 ]}
             />
-            <ReceiptEditForm receipt={receipt} canSend={false} />
+            <ReceiptEditForm receipt={receipt} canSend={canSend} />
         </main>
     );
 }

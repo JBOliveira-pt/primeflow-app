@@ -186,6 +186,7 @@ export async function fetchReceiptDetail(receiptId: string) {
             invoice_date: string;
             invoice_payment_date: string | null;
             invoice_created_by: string | null;
+            receipt_created_by: string | null;
             customer_id: string;
             customer_name: string;
             customer_nif: string | null;
@@ -205,6 +206,7 @@ export async function fetchReceiptDetail(receiptId: string) {
             receipts.irs_withholding,
             receipts.pdf_url,
             receipts.sent_at,
+            receipts.created_by AS receipt_created_by,
             invoices.id AS invoice_id,
             invoices.date AS invoice_date,
             invoices.payment_date AS invoice_payment_date,

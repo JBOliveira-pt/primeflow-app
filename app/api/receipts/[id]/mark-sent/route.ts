@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import postgres from "postgres";
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/app/lib/auth-helpers";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
 
@@ -20,19 +21,53 @@ export async function POST(
 
         const { id } = await params;
 
-        // Get current user ID from database
-        const user = await sql`
-            SELECT id FROM users WHERE clerk_user_id = ${userId}
-        `;
-
-        if (user.length === 0) {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
             return NextResponse.json(
                 { error: "User not found" },
                 { status: 404 },
             );
         }
 
-        const currentUserId = user[0].id;
+        const receiptRows = await sql<
+            {
+                id: string;
+                created_by: string | null;
+                organization_id: string;
+                status: "pending_send" | "sent_to_customer";
+            }[]
+        >`
+            SELECT id, created_by, organization_id, status
+            FROM receipts
+            WHERE id = ${id}
+        `;
+
+        const receipt = receiptRows[0];
+        if (!receipt) {
+            return NextResponse.json(
+                { error: "Receipt not found" },
+                { status: 404 },
+            );
+        }
+
+        if (receipt.organization_id !== currentUser.organization_id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const canSend =
+            currentUser.role === "admin" ||
+            receipt.created_by === currentUser.id;
+
+        if (!canSend) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        if (receipt.status === "sent_to_customer") {
+            return NextResponse.json(
+                { error: "Receipt already sent" },
+                { status: 409 },
+            );
+        }
 
         // Update receipt status and sent_at timestamp
         await sql`
@@ -40,7 +75,7 @@ export async function POST(
             SET 
                 status = 'sent_to_customer',
                 sent_at = NOW(),
-                sent_by_user = ${currentUserId}
+                sent_by_user = ${currentUser.id}
             WHERE id = ${id}
         `;
 

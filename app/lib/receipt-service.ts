@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import { auth } from "@clerk/nextjs/server";
-import { canEditResource, isUserAdmin, getCurrentUser } from "./auth-helpers";
+import { canEditResource, getCurrentUser } from "./auth-helpers";
 import { uploadReceiptPdfToR2 } from "./r2-storage";
 import { generateReceiptPdf, type ReceiptPdfData } from "./receipt-pdf";
 
@@ -233,8 +233,7 @@ export async function sendReceipt(receiptId: string) {
         throw new Error("Invoice not found");
     }
 
-    const isAdmin = await isUserAdmin();
-    const canSend = isAdmin || (await canEditResource(invoice.created_by));
+    const canSend = await canEditResource(receipt.created_by);
     if (!canSend) {
         throw new Error("Unauthorized");
     }
