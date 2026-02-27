@@ -21,6 +21,9 @@ export function CardSkeleton() {
 export function CardsSkeleton() {
     return (
         <>
+            <div className="col-span-2 lg:col-span-1">
+                <CardSkeleton />
+            </div>
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />
@@ -95,7 +98,10 @@ export default function DashboardSkeleton() {
                     className={`${shimmer} relative h-5 w-48 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-800`}
                 />
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
+                <div className="col-span-2 lg:col-span-1">
+                    <CardSkeleton />
+                </div>
                 <CardSkeleton />
                 <CardSkeleton />
                 <CardSkeleton />

@@ -1,25 +1,35 @@
 "use client";
 
 import { formatCurrencyPTBR, generateYAxis } from "@/app/lib/utils";
-import { CalendarIcon, TrendingUp, ArrowUpRight } from "lucide-react";
+import {
+    CalendarIcon,
+    TrendingUp,
+    ArrowUpRight,
+    ArrowDownRight,
+} from "lucide-react";
 import { Revenue } from "@/app/lib/definitions";
 import { useState, useEffect } from "react";
 
 interface RevenueChartProps {
     revenue: Revenue[];
+    pendingRevenue: Revenue[];
 }
 
 export default function RevenueChart({
     revenue: allRevenue,
+    pendingRevenue: allPendingRevenue,
 }: RevenueChartProps) {
     const [selectedMonths, setSelectedMonths] = useState<3 | 5 | 12>(12);
+    const [activeTab, setActiveTab] = useState<"paid" | "pending">("paid");
     const [revenue, setRevenue] = useState<Revenue[]>([]);
 
     useEffect(() => {
-        // Filtrar os dados baseado nos meses selecionados
-        const filtered = allRevenue.slice(-selectedMonths);
+        // Filtrar os dados baseado nos meses selecionados e aba ativa
+        const sourceData =
+            activeTab === "paid" ? allRevenue : allPendingRevenue;
+        const filtered = sourceData.slice(-selectedMonths);
         setRevenue(filtered);
-    }, [selectedMonths, allRevenue]);
+    }, [selectedMonths, activeTab, allRevenue, allPendingRevenue]);
 
     const chartHeight = 350;
     const { yAxisLabels, topLabel } = generateYAxis(revenue);
@@ -54,18 +64,51 @@ export default function RevenueChart({
             {/* Header com título e métricas */}
             <div className="mb-4 flex items-start justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        Receita Recente
-                    </h2>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Receita
+                        </h2>
+                        {/* Abas */}
+                        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                            <button
+                                onClick={() => setActiveTab("paid")}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                                    activeTab === "paid"
+                                        ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                                }`}
+                            >
+                                Recente
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("pending")}
+                                className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                                    activeTab === "pending"
+                                        ? "bg-white dark:bg-gray-700 text-yellow-600 dark:text-yellow-400 shadow-sm"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                                }`}
+                            >
+                                Pendente
+                            </button>
+                        </div>
+                    </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Últimos {selectedMonths} meses
                     </p>
                 </div>
 
-                {growth != 0 && (
+                {Number(growth) > 0 && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10">
                         <ArrowUpRight className="w-4 h-4 text-green-500" />
                         <span className="text-sm font-medium text-green-500">
+                            +{growth}%
+                        </span>
+                    </div>
+                )}
+                {Number(growth) < 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/10">
+                        <ArrowDownRight className="w-4 h-4 text-red-500" />
+                        <span className="text-sm font-medium text-red-500">
                             {growth}%
                         </span>
                     </div>
@@ -152,8 +195,12 @@ export default function RevenueChart({
                                             w-full rounded-t-md transition-all duration-300 cursor-pointer
                                             ${
                                                 isLastMonth
-                                                    ? "bg-gradient-to-t from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20"
-                                                    : "bg-gradient-to-t from-gray-400 to-gray-300 dark:from-gray-700 dark:to-gray-600 hover:from-gray-500 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-500"
+                                                    ? activeTab === "paid"
+                                                        ? "bg-gradient-to-t from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20"
+                                                        : "bg-gradient-to-t from-yellow-600 to-yellow-500 shadow-lg shadow-yellow-500/20"
+                                                    : activeTab === "paid"
+                                                      ? "bg-gradient-to-t from-gray-400 to-gray-300 dark:from-gray-700 dark:to-gray-600 hover:from-gray-500 hover:to-gray-400 dark:hover:from-gray-600 dark:hover:to-gray-500"
+                                                      : "bg-gradient-to-t from-yellow-400 to-yellow-300 dark:from-yellow-700 dark:to-yellow-600 hover:from-yellow-500 hover:to-yellow-400 dark:hover:from-yellow-600 dark:hover:to-yellow-500"
                                             }
                                         `}
                                         style={{

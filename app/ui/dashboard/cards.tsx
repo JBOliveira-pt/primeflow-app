@@ -7,6 +7,7 @@ import {
     FileText,
     DollarSign,
     Clock,
+    ReceiptText,
 } from "lucide-react";
 import {
     Card,
@@ -35,6 +36,7 @@ export default async function CardWrapper() {
     const {
         numberOfCustomers,
         numberOfInvoices,
+        numberOfReceipts,
         totalPaidInvoices,
         totalPendingInvoices,
         numberOfPendingInvoices,
@@ -46,9 +48,11 @@ export default async function CardWrapper() {
     return (
         <>
             {/* Card 1 - Receitas Coletadas */}
-            <Card className="text-gray-900 dark:text-white hover:border-green-600 dark:hover:border-green-800/50 transition-all duration-200 col-span-1">
+            <Card className="text-gray-900 dark:text-white bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-600/20 dark:to-emerald-600/20 border-green-300 dark:border-green-800/50 col-span-2 lg:col-span-1">
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs">COLETADO</CardTitle>
+                    <CardTitle className="text-xs text-green-700 dark:text-green-200">
+                        RECEBIDO
+                    </CardTitle>
 
                     <div className="p-1.5 bg-green-500/10 rounded-lg">
                         <DollarSign className="text-green-500 w-4 h-4" />
@@ -56,13 +60,13 @@ export default async function CardWrapper() {
                 </CardHeader>
 
                 <CardContent>
-                    <div className="text-xl lg:text-2xl font-bold">
+                    <div className="text-xl lg:text-2xl font-bold text-green-900 dark:text-green-100">
                         {formatCurrency(totalPaidInvoices)}
                     </div>
 
                     <div className="flex items-center gap-1 mt-2">
                         <TrendingUp className="text-green-500 w-3 h-3" />
-                        <span className="text-xs text-green-500">
+                        <span className="text-xs text-green-600 dark:text-green-400">
                             {percentPaidChange > 0
                                 ? `+${percentPaidChange.toFixed(2)}%`
                                 : `${percentPaidChange.toFixed(2)}%`}
@@ -115,18 +119,36 @@ export default async function CardWrapper() {
                 </CardContent>
             </Card>
 
-            {/* Card 4 - Total de Clientes */}
-            <Card className="text-gray-900 dark:text-white bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-600/20 dark:to-pink-600/20 border-purple-300 dark:border-purple-800/50 col-span-1">
+            {/* Card 4 - Total de Recibos */}
+            <Card className="text-gray-900 dark:text-white hover:border-teal-600 dark:hover:border-teal-800/50 transition-all duration-200 col-span-1">
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-xs text-purple-700 dark:text-purple-200">
-                        CLIENTES
-                    </CardTitle>
+                    <CardTitle className="text-xs">RECIBOS</CardTitle>
+                    <div className="p-1.5 bg-teal-500/10 rounded-lg">
+                        <ReceiptText className="text-teal-500 w-4 h-4" />
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-xl lg:text-2xl font-bold">
+                        {numberOfReceipts}
+                    </div>
+                    <div className="flex items-center gap-1 mt-2">
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                            Total
+                        </span>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Card 5 - Total de Clientes */}
+            <Card className="text-gray-900 dark:text-white hover:border-purple-600 dark:hover:border-purple-800/50 transition-all duration-200 col-span-1">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle className="text-xs">CLIENTES</CardTitle>
                     <div className="p-1.5 bg-purple-500/10 rounded-lg">
                         <Users className="text-purple-500 dark:text-purple-400 w-4 h-4" />
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl lg:text-2xl font-bold text-purple-900 dark:text-purple-100">
+                    <div className="text-xl lg:text-2xl font-bold">
                         {numberOfCustomers}
                     </div>
                     <div className="flex items-center gap-1 mt-2">

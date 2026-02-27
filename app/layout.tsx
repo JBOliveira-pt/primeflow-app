@@ -37,7 +37,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <ClerkProvider>
+        <ClerkProvider
+            signInUrl="/login"
+            signUpUrl="/signup"
+            afterSignInUrl="/dashboard"
+            afterSignUpUrl="/dashboard"
+            signInFallbackRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/dashboard"
+        >
             <html lang="en" className="h-full">
                 <head>
                     <script

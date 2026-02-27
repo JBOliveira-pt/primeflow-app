@@ -1,13 +1,19 @@
 // app/dashboard/invoices/page.tsx
 import Pagination from "@/app/ui/invoices/pagination";
 import Search from "@/app/ui/search";
-import Table from "@/app/ui/invoices/table";
+import InvoicesTable from "@/app/ui/invoices/table";
 import { CreateInvoice } from "@/app/ui/invoices/buttons";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
+import InvoiceFiltersForm from "@/app/ui/invoices/filters";
 import { Suspense } from "react";
-import { fetchInvoicesPages } from "@/app/lib/data";
+import {
+    fetchInvoicesPages,
+    fetchInvoiceCustomers,
+    fetchInvoiceDates,
+    fetchInvoicePaymentDates,
+    InvoiceFilters,
+} from "@/app/lib/data";
 import { Metadata } from "next";
-import { formatCurrencyPTBR } from "@/app/lib/utils";
 
 export const metadata: Metadata = {
     title: "Invoices | PrimeFlow Dashboard",
@@ -39,13 +45,33 @@ function PaginationSkeleton() {
 export default async function Page(props: {
     searchParams?: Promise<{
         query?: string;
+        customer?: string;
+        status?: "pending" | "paid";
+        dateFrom?: string;
+        dateTo?: string;
         page?: string;
     }>;
 }) {
     const searchParams = await props.searchParams;
     const query = searchParams?.query || "";
+
+    const filters: InvoiceFilters = {
+        query,
+        customerId: searchParams?.customer || undefined,
+        status: searchParams?.status || undefined,
+        dateFrom: searchParams?.dateFrom || undefined,
+        dateTo: searchParams?.dateTo || undefined,
+    };
+
     const currentPage = Number(searchParams?.page) || 1;
-    const totalPages = await fetchInvoicesPages(query);
+
+    const [customers, totalPages, invoiceDates, paymentDates] =
+        await Promise.all([
+            fetchInvoiceCustomers(),
+            fetchInvoicesPages(filters),
+            fetchInvoiceDates(),
+            fetchInvoicePaymentDates(),
+        ]);
 
     return (
         <div className="w-full min-h-screen p-6 bg-gray-50 dark:bg-gray-950">
@@ -65,11 +91,20 @@ export default async function Page(props: {
                 <CreateInvoice />
             </div>
 
+            <div className="mt-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4">
+                <InvoiceFiltersForm
+                    customers={customers}
+                    invoiceDates={invoiceDates}
+                    paymentDates={paymentDates}
+                    filters={filters}
+                />
+            </div>
+
             <Suspense
-                key={query + currentPage}
+                key={query + JSON.stringify(filters) + currentPage}
                 fallback={<InvoicesTableSkeleton />}
             >
-                <Table query={query} currentPage={currentPage} />
+                <InvoicesTable filters={filters} currentPage={currentPage} />
             </Suspense>
 
             <div className="mt-5 flex w-full justify-center">

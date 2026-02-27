@@ -18,10 +18,6 @@ export default function SignUpPage() {
                         footerActionLink: "text-blue-400 hover:text-blue-300",
                     },
                 }}
-                signInUrl="/login"
-                fallbackRedirectUrl="/dashboard"
-                routing="path"
-                path="/signup"
             />
         </main>
     );

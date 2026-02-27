@@ -1,9 +1,9 @@
 "use client";
 
-import { ReceiptFilters } from "@/app/lib/receipts-data";
+import { InvoiceFilters } from "@/app/lib/data";
 import DatePickerCalendar from "@/app/ui/components/date-picker-calendar";
 
-export default function ReceiptFiltersForm({
+export default function InvoiceFiltersForm({
     customers,
     invoiceDates,
     paymentDates,
@@ -12,11 +12,11 @@ export default function ReceiptFiltersForm({
     customers: { id: string; name: string }[];
     invoiceDates: string[];
     paymentDates: string[];
-    filters: ReceiptFilters;
+    filters: InvoiceFilters;
 }) {
     const handleDateFromChange = (date: string) => {
         const form = document.querySelector(
-            'form[data-filter-form="receipts"]',
+            'form[data-filter-form="invoices"]',
         ) as HTMLFormElement;
         const dateFromInput = form?.querySelector(
             'input[name="dateFrom"]',
@@ -28,7 +28,7 @@ export default function ReceiptFiltersForm({
 
     const handleDateToChange = (date: string) => {
         const form = document.querySelector(
-            'form[data-filter-form="receipts"]',
+            'form[data-filter-form="invoices"]',
         ) as HTMLFormElement;
         const dateToInput = form?.querySelector(
             'input[name="dateTo"]',
@@ -42,7 +42,7 @@ export default function ReceiptFiltersForm({
         <form
             className="grid gap-4 md:grid-cols-6"
             method="get"
-            data-filter-form="receipts"
+            data-filter-form="invoices"
         >
             <input type="hidden" name="query" value={filters.query || ""} />
             <input
@@ -100,8 +100,8 @@ export default function ReceiptFiltersForm({
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white"
                 >
                     <option value="">Todos</option>
-                    <option value="pending_send">Pendente de envio</option>
-                    <option value="sent_to_customer">Enviado ao cliente</option>
+                    <option value="pending">Pendente</option>
+                    <option value="paid">Pago</option>
                 </select>
             </div>
 
@@ -113,7 +113,7 @@ export default function ReceiptFiltersForm({
                     Filtrar
                 </button>
                 <a
-                    href="/dashboard/receipts"
+                    href="/dashboard/invoices"
                     className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                     Limpar

@@ -164,6 +164,7 @@ export type ReceiptsTableRow = {
     customer_email: string;
     customer_id: string;
     amount: number;
+    invoice_date: string;
     received_date: string;
     payment_date: string | null;
     status: ReceiptStatus;

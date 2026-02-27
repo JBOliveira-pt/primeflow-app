@@ -62,11 +62,11 @@ export async function fetchFilteredReceipts(
     }
 
     if (filters.dateFrom) {
-        conditions.push(sql`invoices.date >= ${filters.dateFrom}`);
+        conditions.push(sql`DATE(invoices.date) = ${filters.dateFrom}`);
     }
 
     if (filters.dateTo) {
-        conditions.push(sql`invoices.payment_date <= ${filters.dateTo}`);
+        conditions.push(sql`DATE(invoices.payment_date) = ${filters.dateTo}`);
     }
 
     let whereClause = sql``;
@@ -85,6 +85,7 @@ export async function fetchFilteredReceipts(
             receipts.invoice_id,
             receipts.amount,
             receipts.received_date,
+            invoices.date AS invoice_date,
             invoices.payment_date AS payment_date,
             receipts.status,
             receipts.pdf_url,
@@ -128,11 +129,11 @@ export async function fetchReceiptsPages(filters: ReceiptFilters) {
     }
 
     if (filters.dateFrom) {
-        conditions.push(sql`invoices.date >= ${filters.dateFrom}`);
+        conditions.push(sql`DATE(invoices.date) = ${filters.dateFrom}`);
     }
 
     if (filters.dateTo) {
-        conditions.push(sql`invoices.payment_date <= ${filters.dateTo}`);
+        conditions.push(sql`DATE(invoices.payment_date) = ${filters.dateTo}`);
     }
 
     let whereClause = sql``;

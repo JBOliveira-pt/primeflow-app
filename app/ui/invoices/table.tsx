@@ -3,16 +3,16 @@ import Image from "next/image";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 import InvoiceStatus from "@/app/ui/invoices/status";
 import { formatDateToLocal, formatCurrencyPTBR } from "@/app/lib/utils";
-import { fetchFilteredInvoices } from "@/app/lib/data";
+import { fetchFilteredInvoices, InvoiceFilters } from "@/app/lib/data";
 
 export default async function InvoicesTable({
-    query,
+    filters,
     currentPage,
 }: {
-    query: string;
+    filters: InvoiceFilters;
     currentPage: number;
 }) {
-    const invoices = await fetchFilteredInvoices(query, currentPage);
+    const invoices = await fetchFilteredInvoices(filters, currentPage);
 
     const getAmountColor = (status: string) => {
         return status === "paid"

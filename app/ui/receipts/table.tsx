@@ -29,6 +29,9 @@ export default async function ReceiptsTable({
                                             {receipt.customer_name}
                                         </p>
                                         <p className="text-xs text-gray-500">
+                                            {receipt.customer_email}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
                                             Recibo #{receipt.receipt_number}
                                         </p>
                                     </div>
@@ -38,6 +41,12 @@ export default async function ReceiptsTable({
                                     <div>
                                         <p className="text-lg font-medium text-gray-900 dark:text-white">
                                             {formatCurrencyPTBR(receipt.amount)}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            Lançamento:{" "}
+                                            {formatDateToLocal(
+                                                receipt.invoice_date,
+                                            )}
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {receipt.payment_date
@@ -94,7 +103,13 @@ export default async function ReceiptsTable({
                                     scope="col"
                                     className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
                                 >
-                                    Data de Pagamento
+                                    Lançamento
+                                </th>
+                                <th
+                                    scope="col"
+                                    className="px-3 py-4 text-left text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+                                >
+                                    Pagamento
                                 </th>
                                 <th
                                     scope="col"
@@ -120,15 +135,22 @@ export default async function ReceiptsTable({
                                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                                             #{receipt.receipt_number}
                                         </p>
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {receipt.customer_name}
+                                        </p>
                                         <p className="text-xs text-gray-500">
                                             {receipt.customer_email}
                                         </p>
                                     </td>
-                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                        {receipt.customer_name}
-                                    </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 dark:text-white">
                                         {formatCurrencyPTBR(receipt.amount)}
+                                    </td>
+                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                        {formatDateToLocal(
+                                            receipt.invoice_date,
+                                        )}
                                     </td>
                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-400">
                                         {receipt.payment_date

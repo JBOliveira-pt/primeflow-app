@@ -9,7 +9,7 @@ import {
     CardsSkeleton,
 } from "@/app/ui/skeletons";
 import { getCurrentUser } from "@/app/lib/auth-helpers";
-import { fetchRevenue } from "@/app/lib/data";
+import { fetchRevenue, fetchPendingRevenue } from "@/app/lib/data";
 
 // Forçar renderização dinâmica (requerida para Next.js Production)
 export const dynamic = "force-dynamic";
@@ -17,7 +17,10 @@ export const dynamic = "force-dynamic";
 export default async function Page() {
     const user = await getCurrentUser();
     const userName = user?.name || user?.email?.split("@")[0] || "Usuário";
-    const revenue = await fetchRevenue();
+    const [revenue, pendingRevenue] = await Promise.all([
+        fetchRevenue(),
+        fetchPendingRevenue(),
+    ]);
 
     return (
         <div className="bg-gray-50 dark:bg-gray-950 w-full min-h-screen p-6">
@@ -33,7 +36,7 @@ export default async function Page() {
             </div>
 
             {/* Cards KPI */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
                 <Suspense fallback={<CardsSkeleton />}>
                     <CardWrapper />
                 </Suspense>
@@ -42,7 +45,10 @@ export default async function Page() {
             {/* Gráficos */}
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
                 <Suspense fallback={<RevenueChartSkeleton />}>
-                    <RevenueChart revenue={revenue} />
+                    <RevenueChart
+                        revenue={revenue}
+                        pendingRevenue={pendingRevenue}
+                    />
                 </Suspense>
 
                 <Suspense fallback={<LatestInvoicesSkeleton />}>
