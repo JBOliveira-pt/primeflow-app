@@ -6,6 +6,7 @@ import {
     TrendingUp,
     ArrowUpRight,
     ArrowDownRight,
+    TrendingDown,
 } from "lucide-react";
 import { Revenue } from "@/app/lib/definitions";
 import { useState, useEffect } from "react";
@@ -78,7 +79,7 @@ export default function RevenueChart({
                                         : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                                 }`}
                             >
-                                Recente
+                                Recebida
                             </button>
                             <button
                                 onClick={() => setActiveTab("pending")}
@@ -227,12 +228,22 @@ export default function RevenueChart({
                             Dados atualizados mensalmente
                         </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-gray-600 dark:text-gray-500">
-                            Tendência positiva
-                        </span>
-                    </div>
+                    {Number(growth) > 0 && (
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <span className="text-xs text-gray-600 dark:text-gray-500">
+                                Tendência positiva
+                            </span>
+                        </div>
+                    )}
+                    {Number(growth) < 0 && (
+                        <div className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4 text-red-500" />
+                            <span className="text-xs text-gray-600 dark:text-gray-500">
+                                Tendência negativa
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
